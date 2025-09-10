@@ -1,12 +1,14 @@
 #pragma once
 
-#include <net/address.hpp>
+#include <net/defines.hpp>
 
 #include <concepts>
 #include <expected>
+#include <format>
 #include <initializer_list>
 #include <limits>
 #include <string_view>
+#include <utility>
 
 namespace net {
     enum class ParseError {
@@ -68,3 +70,21 @@ namespace net {
         return value;
     }
 }
+
+template<typename CharT>
+struct std::formatter<net::ParseError, CharT> {
+    static constexpr auto parse(auto& ctx) noexcept -> decltype(ctx.begin()) {
+        return ctx.begin();
+    }
+
+    static auto format(const net::ParseError error, auto& ctx) -> decltype(ctx.out()) {
+        switch(error) {
+        case net::ParseError::InvalidCharacter:
+            return std::format_to(ctx.out(), "The input contains a character that is not a digit or a delimiter!");
+        case net::ParseError::ValueOutOfBounds:
+            return std::format_to(ctx.out(), "The number is too large to fit in the desired type!");
+        }
+
+        std::unreachable();
+    }
+};
