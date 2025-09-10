@@ -1,5 +1,3 @@
 #include <net/address.hpp>
 
-namespace net {
-
-}
+namespace net {}

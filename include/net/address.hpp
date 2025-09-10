@@ -1,9 +1,9 @@
 #pragma once
 
 #include <net/defines.hpp>
+#include <net/utils/parse.hpp>
 
 #include <array>
-#include <print>
 
 namespace net {
     struct IPv4Address {
@@ -18,25 +18,14 @@ namespace net {
             IPv4Address v4{};
 
             for(u8 octet = 0U; octet < 4U; ++octet) {
-                if(*str < '0' || *str > '9') {
+                const auto address_result = parse_uint(str, 3U, { '.', ':' });
+                if(!address_result) {
                     throw;
                 }
 
-                u16 address = 0U;
-                for(u8 i = 0U; i < 3U; ++i) {
-                    const char c = *str;
-
-                    if(c == '.' || c == ':' || c == '\0') {
-                        break;
-                    }
-
-                    if(c < '0' || c > '9') {
-                        throw;
-                    }
-
-                    address = address * 10U + (c - '0');
-
-                    ++str;
+                const auto address = address_result.value();
+                if(address > 0xFFU) {
+                    throw;
                 }
 
                 if(octet < 3U) {
@@ -45,14 +34,6 @@ namespace net {
                     }
 
                     ++str;
-                }
-
-                if(octet == 3U && !(*str == ':' || *str == '\0')) {
-                    throw;
-                }
-
-                if(address > 0xFFU) {
-                    throw;
                 }
 
                 v4.address[octet] = address;
@@ -66,36 +47,21 @@ namespace net {
                 throw;
             }
 
-            if(*str < '0' || *str > '9') {
+            const auto port_result = parse_uint(str, 5U);
+            if(!port_result) {
                 throw;
             }
 
-            u32 port = 0U;
-            for(u8 i = 0U; i < 5U; ++i) {
-                const char c = *str;
-
-                if(c == '\0') {
-                    break;
-                }
-
-                if(c < '0' || c > '9') {
-                    throw;
-                }
-
-                port = port * 10U + (c - '0');
-
-                ++str;
-            }
-
-            if(*str != '\0') {
-                throw;
-            }
-
+            const auto port = port_result.value();
             if(port > 0xFFFFU) {
                 throw;
             }
 
             v4.port = port;
+
+            if(*str != '\0') {
+                throw;
+            }
 
             return v4;
         }
