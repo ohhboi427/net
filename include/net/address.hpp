@@ -22,7 +22,9 @@ namespace net {
         IPv4Address v4{};
 
         for(u8 octet = 0U; octet < 4U; ++octet) {
-            const auto address = parse_uint_auto<u8>(str, { '.', ':' });
+            static constexpr auto DELIMITERS = { '.', ':' };
+
+            const auto address = parse_uint_auto<u8>(str, DELIMITERS);
             if(!address) {
                 return std::unexpected(address.error());
             }

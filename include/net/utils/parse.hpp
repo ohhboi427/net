@@ -6,8 +6,8 @@
 #include <concepts>
 #include <expected>
 #include <format>
-#include <initializer_list>
 #include <limits>
+#include <span>
 #include <string_view>
 #include <utility>
 
@@ -98,13 +98,13 @@ namespace net {
     template<std::unsigned_integral T, ParseBase B>
     constexpr auto parse_uint(
         std::string_view& str,
-        std::initializer_list<char> delimiters = {}
+        std::span<const char> delimiters = {}
     ) noexcept -> std::expected<T, ParseError>;
 
     template<std::unsigned_integral T, ParseBase B>
     constexpr auto parse_uint(
         std::string_view& str,
-        const std::initializer_list<char> delimiters
+        const std::span<const char> delimiters
     ) noexcept -> std::expected<T, ParseError> {
         using Rules = detail::ParseRules<B>;
 
@@ -138,13 +138,13 @@ namespace net {
     template<std::unsigned_integral T>
     constexpr auto parse_uint_auto(
         std::string_view& str,
-        std::initializer_list<char> delimiters = {}
+        std::span<const char> delimiters = {}
     ) noexcept -> std::expected<T, ParseError>;
 
     template<std::unsigned_integral T>
     constexpr auto parse_uint_auto(
         std::string_view& str,
-        const std::initializer_list<char> delimiters
+        const std::span<const char> delimiters
     ) noexcept -> std::expected<T, ParseError> {
         if(str.empty()) {
             return std::unexpected(ParseError::InvalidCharacter);
