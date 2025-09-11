@@ -12,14 +12,38 @@
 #include <utility>
 
 namespace net {
+    /**
+     * Kinds of error that can occur in parsing.
+     */
     enum class ParseError {
+        /**
+         * An unexpected character was found in the parsed string.
+         */
         InvalidCharacter,
+
+        /**
+         * The parsed value is out of bounds allowed by the target type.
+         */
         ValueOutOfBounds,
     };
 
+    /**
+     * Numeric base modes of parsing.
+     */
     enum class ParseBase {
+        /**
+         * Base 10. ("12")
+         */
         Decimal,
+
+        /**
+         * Base 8. ("012")
+         */
         Octal,
+
+        /**
+         * Base 16. ("0xAB")
+         */
         Hexadecimal,
     };
 
@@ -95,6 +119,21 @@ namespace net {
         };
     }
 
+    /**
+     * Tries to parse an unsigned integer value from a string with a specific numerical base.
+     * The parsing stops if any of the given delimiter characters or a null terminator character has been found.
+     *
+     * It advances the given string to past the parsed digits.
+     * If an error occurred, it will advance to the character that caused the error.
+     *
+     * @tparam T The target unsigned integer type.
+     * @tparam B The numerical base for parsing.
+     *
+     * @param str The string to parse from. Updated to point past the last parsed character.
+     * @param delimiters A span of delimiter characters.
+     *
+     * @return The parsed value or an error kind describing the error.
+     */
     template<std::unsigned_integral T, ParseBase B>
     constexpr auto parse_uint(
         std::string_view& str,
@@ -108,7 +147,7 @@ namespace net {
     ) noexcept -> std::expected<T, ParseError> {
         using Rules = detail::ParseRules<B>;
 
-        if(str.empty()|| !Rules::is_char_valid(str.front())) {
+        if(str.empty() || !Rules::is_char_valid(str.front())) {
             return std::unexpected(ParseError::InvalidCharacter);
         }
 
@@ -135,6 +174,22 @@ namespace net {
         return value;
     }
 
+    /**
+     * Tries to parse an unsigned integer value from a string, automatically inferring the numerical base.
+     * The parsing stops if any of the given delimiter characters or a null terminator character has been found.
+     *
+     * It advances the given string to past the parsed digits.
+     * If an error occurred, it will advance to the character that caused the error.
+     *
+     * The numerical base follows C++ integer literal types.
+     *
+     * @tparam T The target unsigned integer type.
+     *
+     * @param str The string to parse from. Updated to point past the last parsed character.
+     * @param delimiters A span of delimiter characters.
+     *
+     * @return The parsed value or an error kind describing the error.
+     */
     template<std::unsigned_integral T>
     constexpr auto parse_uint_auto(
         std::string_view& str,
