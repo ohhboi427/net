@@ -22,7 +22,7 @@ namespace net {
         IPv4Address v4{};
 
         for(u8 octet = 0U; octet < 4U; ++octet) {
-            const auto address = parse_uint<u8>(str, { '.', ':' });
+            const auto address = parse_uint_auto<u8>(str, { '.', ':' });
             if(!address) {
                 return std::unexpected(address.error());
             }
@@ -48,7 +48,7 @@ namespace net {
 
         str.remove_prefix(1U);
 
-        const auto port = parse_uint<u16>(str);
+        const auto port = parse_uint_auto<u16>(str);
         if(!port) {
             return std::unexpected(port.error());
         }

@@ -2,6 +2,7 @@
 
 #include <net/defines.hpp>
 
+#include <algorithm>
 #include <concepts>
 #include <expected>
 #include <format>
@@ -16,18 +17,98 @@ namespace net {
         ValueOutOfBounds,
     };
 
-    template<std::unsigned_integral T>
+    enum class ParseBase {
+        Decimal,
+        Octal,
+        Hexadecimal,
+    };
+
+    namespace detail {
+        template<ParseBase>
+        struct ParseRules;
+
+        template<>
+        struct ParseRules<ParseBase::Decimal> {
+            static constexpr usize VALUE = 10U;
+
+            static constexpr auto is_char_valid(const char c) noexcept -> bool {
+                if(c >= '0' && c <= '9') {
+                    return true;
+                }
+
+                return false;
+            }
+
+            static constexpr auto char_value(const char c) noexcept -> usize {
+                return c - '0';
+            }
+        };
+
+        template<>
+        struct ParseRules<ParseBase::Octal> {
+            static constexpr usize VALUE = 8U;
+
+            static constexpr auto is_char_valid(const char c) noexcept -> bool {
+                if(c >= '0' && c <= '7') {
+                    return true;
+                }
+
+                return false;
+            }
+
+            static constexpr auto char_value(const char c) noexcept -> usize {
+                return c - '0';
+            }
+        };
+
+        template<>
+        struct ParseRules<ParseBase::Hexadecimal> {
+            static constexpr usize VALUE = 16U;
+
+            static constexpr auto is_char_valid(const char c) noexcept -> bool {
+                if(c >= '0' && c <= '9') {
+                    return true;
+                }
+
+                if((c >= 'A' && c <= 'F') || (c >= 'a' && c <= 'f')) {
+                    return true;
+                }
+
+                return false;
+            }
+
+            static constexpr auto char_value(const char c) noexcept -> usize {
+                if(c >= '0' && c <= '9') {
+                    return c - '0';
+                }
+
+                if(c >= 'A' && c <= 'F') {
+                    return c - 'A' + 10U;
+                }
+
+                if(c >= 'a' && c <= 'f') {
+                    return c - 'a' + 10U;
+                }
+
+                std::unreachable();
+            }
+        };
+    }
+
+    template<std::unsigned_integral T, ParseBase B>
     constexpr auto parse_uint(
         std::string_view& str,
-        std::initializer_list<const char> delimiters = {}
+        std::initializer_list<char> delimiters = {}
     ) noexcept -> std::expected<T, ParseError>;
 
-    template<std::unsigned_integral T>
+    template<std::unsigned_integral T, ParseBase B>
     constexpr auto parse_uint(
         std::string_view& str,
-        const std::initializer_list<const char> delimiters
+        const std::initializer_list<char> delimiters
     ) noexcept -> std::expected<T, ParseError> {
-        if(str.empty() || str.front() < '0' || str.front() > '9') {
+        using Rules = detail::ParseRules<B>;
+
+        if(str.empty() || !Rules::is_char_valid(str.front())) {
             return std::unexpected(ParseError::InvalidCharacter);
         }
 
@@ -35,24 +116,15 @@ namespace net {
         while(!str.empty()) {
             const char c = str.front();
 
-            bool is_delimiter = false;
-            for(const auto d : delimiters) {
-                if(c == d) {
-                    is_delimiter = true;
-
-                    break;
-                }
-            }
-
-            if(is_delimiter) {
+            if(std::ranges::contains(delimiters, c)) {
                 break;
             }
 
-            if(c < '0' || c > '9') {
+            if(!Rules::is_char_valid(c)) {
                 return std::unexpected(ParseError::InvalidCharacter);
             }
 
-            value = value * 10U + (c - '0');
+            value = value * Rules::VALUE + Rules::char_value(c);
             if(value > std::numeric_limits<T>::max()) {
                 return std::unexpected(ParseError::ValueOutOfBounds);
             }
@@ -61,6 +133,34 @@ namespace net {
         }
 
         return value;
+    }
+
+    template<std::unsigned_integral T>
+    constexpr auto parse_uint_auto(
+        std::string_view& str,
+        std::initializer_list<char> delimiters = {}
+    ) noexcept -> std::expected<T, ParseError>;
+
+    template<std::unsigned_integral T>
+    constexpr auto parse_uint_auto(
+        std::string_view& str,
+        const std::initializer_list<char> delimiters
+    ) noexcept -> std::expected<T, ParseError> {
+        if(str.empty()) {
+            return std::unexpected(ParseError::InvalidCharacter);
+        }
+
+        if(str.starts_with("0x") || str.starts_with("0X")) {
+            str.remove_prefix(2U);
+
+            return parse_uint<T, ParseBase::Hexadecimal>(str, delimiters);
+        }
+
+        if(str.starts_with('0')) {
+            return parse_uint<T, ParseBase::Octal>(str, delimiters);
+        }
+
+        return parse_uint<T, ParseBase::Decimal>(str, delimiters);
     }
 }
 
