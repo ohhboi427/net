@@ -24,7 +24,7 @@ namespace net {
         for(u8 octet = 0U; octet < 4U; ++octet) {
             static constexpr auto DELIMITERS = { '.', ':' };
 
-            const auto address = parse_uint_auto<u8>(str, DELIMITERS);
+            const auto address = parse_uint<u8, ParseBase::Decimal>(str, DELIMITERS);
             if(!address) {
                 return std::unexpected(address.error());
             }
@@ -50,7 +50,7 @@ namespace net {
 
         str.remove_prefix(1U);
 
-        const auto port = parse_uint_auto<u16>(str);
+        const auto port = parse_uint<u16, ParseBase::Decimal>(str);
         if(!port) {
             return std::unexpected(port.error());
         }

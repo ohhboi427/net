@@ -108,7 +108,7 @@ namespace net {
     ) noexcept -> std::expected<T, ParseError> {
         using Rules = detail::ParseRules<B>;
 
-        if(str.empty() || !Rules::is_char_valid(str.front())) {
+        if(str.empty()|| !Rules::is_char_valid(str.front())) {
             return std::unexpected(ParseError::InvalidCharacter);
         }
 
