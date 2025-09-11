@@ -19,26 +19,20 @@ namespace net {
     template<std::unsigned_integral T>
     constexpr auto parse_uint(
         std::string_view& str,
-        usize max_length,
-        std::initializer_list<char> delimiters = {}
+        std::initializer_list<const char> delimiters = {}
     ) noexcept -> std::expected<T, ParseError>;
 
     template<std::unsigned_integral T>
     constexpr auto parse_uint(
         std::string_view& str,
-        const usize max_length,
-        const std::initializer_list<char> delimiters
+        const std::initializer_list<const char> delimiters
     ) noexcept -> std::expected<T, ParseError> {
         if(str.empty() || str.front() < '0' || str.front() > '9') {
             return std::unexpected(ParseError::InvalidCharacter);
         }
 
         usize value = 0U;
-        for(usize i = 0U; i < max_length; ++i) {
-            if(str.empty()) {
-                break;
-            }
-
+        while(!str.empty()) {
             const char c = str.front();
 
             bool is_delimiter = false;
@@ -59,12 +53,11 @@ namespace net {
             }
 
             value = value * 10U + (c - '0');
+            if(value > std::numeric_limits<T>::max()) {
+                return std::unexpected(ParseError::ValueOutOfBounds);
+            }
 
             str.remove_prefix(1U);
-        }
-
-        if(value > std::numeric_limits<T>::max()) {
-            return std::unexpected(ParseError::ValueOutOfBounds);
         }
 
         return value;
