@@ -30,7 +30,7 @@ namespace net {
             }
 
             if(octet < 3U) {
-                if(str.front() != '.') {
+                if(str.empty() || str.front() != '.') {
                     return std::unexpected(ParseError::InvalidCharacter);
                 }
 
