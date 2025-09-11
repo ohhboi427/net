@@ -5,6 +5,7 @@
 
 #include <array>
 #include <expected>
+#include <format>
 #include <string_view>
 
 namespace net {
@@ -74,3 +75,22 @@ namespace net {
         }
     }
 }
+
+template<typename CharT>
+struct std::formatter<net::IPv4Address, CharT> {
+    static constexpr auto parse(auto& ctx) noexcept -> decltype(ctx.begin()) {
+        return ctx.begin();
+    }
+
+    static auto format(const net::IPv4Address& addr, auto& ctx) -> decltype(ctx.out()) {
+        return std::format_to(
+            ctx.out(),
+            "{}.{}.{}.{}:{}",
+            addr.address[0U],
+            addr.address[1U],
+            addr.address[2U],
+            addr.address[3U],
+            addr.port
+        );
+    }
+};
