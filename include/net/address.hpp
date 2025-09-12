@@ -7,10 +7,15 @@
 #include <expected>
 #include <format>
 #include <string_view>
+#include <utility>
 
 namespace net {
     struct IPv4Address {
-        std::array<u8, 4U> address = { 0U, 0U, 0U, 0U };
+        union {
+            std::array<u8, 4U> octets = { 0U, 0U, 0U, 0U };
+            u32 value_be;
+        } address;
+
         u16 port = 0U;
 
         [[nodiscard]] static constexpr auto parse(
@@ -37,7 +42,7 @@ namespace net {
                 str.remove_prefix(1U);
             }
 
-            v4.address[octet] = address.value();
+            v4.address.octets[octet] = address.value();
         }
 
         if(str.empty()) {
@@ -76,19 +81,63 @@ namespace net {
 
 template<typename CharT>
 struct std::formatter<net::IPv4Address, CharT> {
-    static constexpr auto parse(auto& ctx) noexcept -> decltype(ctx.begin()) {
-        return ctx.begin();
+    enum class Mode {
+        Default,
+        AddressOnly,
+        PortOnly,
+    } mode = Mode::Default;
+
+    constexpr auto parse(auto& ctx) -> decltype(ctx.begin()) {
+        auto it = ctx.begin();
+        if(it == ctx.end()) {
+            return it;
+        }
+
+        switch(*it) {
+        case 'a':
+            mode = Mode::AddressOnly;
+            ++it;
+            break;
+
+        case 'p':
+            mode = Mode::PortOnly;
+            ++it;
+            break;
+
+        default:
+            break;
+        }
+
+        if(it != ctx.end() && *it != '}') {
+            throw;
+        }
+
+        return it;
     }
 
-    static auto format(const net::IPv4Address& addr, auto& ctx) -> decltype(ctx.out()) {
-        return std::format_to(
-            ctx.out(),
-            "{}.{}.{}.{}:{}",
-            addr.address[0U],
-            addr.address[1U],
-            addr.address[2U],
-            addr.address[3U],
-            addr.port
-        );
+    auto format(const net::IPv4Address& addr, auto& ctx) const -> decltype(ctx.out()) {
+        switch(mode) {
+        case Mode::AddressOnly:
+            return std::format_to(
+                ctx.out(),
+                "{}.{}.{}.{}",
+                addr.address.octets[0U],
+                addr.address.octets[1U],
+                addr.address.octets[2U],
+                addr.address.octets[3U]
+            );
+
+        case Mode::PortOnly:
+            return std::format_to(
+                ctx.out(),
+                "{}",
+                addr.port
+            );
+
+        case Mode::Default:
+            return std::format_to(ctx.out(), "{0:a}:{0:p}", addr);
+        }
+
+        std::unreachable();
     }
 };
