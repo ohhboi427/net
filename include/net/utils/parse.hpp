@@ -55,7 +55,7 @@ namespace net {
         struct ParseRules<ParseBase::Decimal> {
             static constexpr usize VALUE = 10U;
 
-            static constexpr auto is_char_valid(const char c) noexcept -> bool {
+            [[nodiscard]] static constexpr auto is_char_valid(const char c) noexcept -> bool {
                 if(c >= '0' && c <= '9') {
                     return true;
                 }
@@ -63,7 +63,7 @@ namespace net {
                 return false;
             }
 
-            static constexpr auto char_value(const char c) noexcept -> usize {
+            [[nodiscard]] static constexpr auto char_value(const char c) noexcept -> usize {
                 return c - '0';
             }
         };
@@ -72,7 +72,7 @@ namespace net {
         struct ParseRules<ParseBase::Octal> {
             static constexpr usize VALUE = 8U;
 
-            static constexpr auto is_char_valid(const char c) noexcept -> bool {
+            [[nodiscard]] static constexpr auto is_char_valid(const char c) noexcept -> bool {
                 if(c >= '0' && c <= '7') {
                     return true;
                 }
@@ -80,7 +80,7 @@ namespace net {
                 return false;
             }
 
-            static constexpr auto char_value(const char c) noexcept -> usize {
+            [[nodiscard]] static constexpr auto char_value(const char c) noexcept -> usize {
                 return c - '0';
             }
         };
@@ -89,7 +89,7 @@ namespace net {
         struct ParseRules<ParseBase::Hexadecimal> {
             static constexpr usize VALUE = 16U;
 
-            static constexpr auto is_char_valid(const char c) noexcept -> bool {
+            [[nodiscard]] static constexpr auto is_char_valid(const char c) noexcept -> bool {
                 if(c >= '0' && c <= '9') {
                     return true;
                 }
@@ -101,7 +101,7 @@ namespace net {
                 return false;
             }
 
-            static constexpr auto char_value(const char c) noexcept -> usize {
+            [[nodiscard]] static constexpr auto char_value(const char c) noexcept -> usize {
                 if(c >= '0' && c <= '9') {
                     return c - '0';
                 }
@@ -135,7 +135,7 @@ namespace net {
      * @return The parsed value or an error kind describing the error.
      */
     template<std::unsigned_integral T, ParseBase B>
-    constexpr auto parse_uint(
+    [[nodiscard]] constexpr auto parse_uint(
         std::string_view& str,
         std::span<const char> delimiters = {}
     ) noexcept -> std::expected<T, ParseError>;
@@ -191,7 +191,7 @@ namespace net {
      * @return The parsed value or an error kind describing the error.
      */
     template<std::unsigned_integral T>
-    constexpr auto parse_uint_auto(
+    [[nodiscard]] constexpr auto parse_uint_auto(
         std::string_view& str,
         std::span<const char> delimiters = {}
     ) noexcept -> std::expected<T, ParseError>;
