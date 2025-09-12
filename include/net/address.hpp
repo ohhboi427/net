@@ -57,10 +57,6 @@ namespace net {
 
         v4.port = port.value();
 
-        if(!str.empty()) {
-            return std::unexpected(ParseError::InvalidCharacter);
-        }
-
         return v4;
     }
 
