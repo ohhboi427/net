@@ -65,9 +65,9 @@ namespace net {
     }
 
     namespace literals {
-        [[nodiscard]] constexpr auto operator""_v4(const char* str, usize length) -> IPv4Address;
+        [[nodiscard]] consteval auto operator""_v4(const char* str, usize length) -> IPv4Address;
 
-        constexpr auto operator""_v4(const char* str, [[maybe_unused]] const usize length) -> IPv4Address {
+        consteval auto operator""_v4(const char* str, [[maybe_unused]] const usize length) -> IPv4Address {
             const auto address = IPv4Address::parse(str);
             if(!address) {
                 throw;
