@@ -11,6 +11,7 @@ namespace net {
         BindingFailed,
         ConnectionFailed,
         TimedOut,
+        ConnectionClosed,
     };
 
     enum class SocketType {
@@ -43,6 +44,8 @@ struct std::formatter<net::SocketError, CharT> {
             return std::format_to(ctx.out(), "Failed to connect to the specified address!");
         case net::SocketError::TimedOut:
             return std::format_to(ctx.out(), "The operation timed out!");
+        case net::SocketError::ConnectionClosed:
+            return std::format_to(ctx.out(), "The connection has been closed!");
         }
 
         std::unreachable();

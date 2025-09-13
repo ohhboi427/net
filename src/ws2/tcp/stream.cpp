@@ -45,7 +45,7 @@ namespace net {
         const isize bytes_sent = send(
             static_cast<SOCKET>(m_socket),
             reinterpret_cast<const char*>(data.data()),
-            data.size(),
+            static_cast<i32>(data.size()),
             0
         );
 
@@ -62,12 +62,16 @@ namespace net {
         const isize bytes_received = recv(
             static_cast<SOCKET>(m_socket),
             reinterpret_cast<char*>(buffer.data()),
-            buffer.size(),
+            static_cast<i32>(buffer.size()),
             0
         );
 
         if(bytes_received == SOCKET_ERROR) {
             return std::unexpected(SocketError::TimedOut);
+        }
+
+        if(bytes_received == 0) {
+            return std::unexpected(SocketError::ConnectionClosed);
         }
 
         return static_cast<usize>(bytes_received);

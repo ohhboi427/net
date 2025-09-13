@@ -29,16 +29,11 @@ auto main() -> i32 {
         const auto stream = std::move(stream_result).value();
 
         while(true) {
-            static std::array<u8, 512U> buffer;
-            auto bytes_received_result = stream.read(buffer);
+            std::array<u8, 512U> buffer{};
 
-            if(!bytes_received_result) {
-                std::println("{}", stream_result.error());
+            if(const auto result = stream.read(buffer); !result) {
+                std::println("{}", result.error());
 
-                break;
-            }
-
-            if(bytes_received_result.value() == 0U) {
                 break;
             }
 
