@@ -34,6 +34,9 @@ namespace net {
         }
     }
 
+    WS2Socket::WS2Socket(const SOCKET handle) noexcept
+        : m_handle{ handle } {}
+
     auto WS2Socket::create(const SocketType type) noexcept -> std::expected<WS2Socket, SocketError> {
         static auto context = WS2Context::create();
         if(!context) {

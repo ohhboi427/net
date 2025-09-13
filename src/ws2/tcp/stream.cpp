@@ -10,6 +10,9 @@
 #pragma comment(lib, "ws2_32.lib")
 
 namespace net {
+    WS2TcpStream::WS2TcpStream(WS2Socket&& socket) noexcept
+        : m_socket{ std::move(socket) } {}
+
     auto WS2TcpStream::connect(const IPv4Address address) noexcept -> std::expected<WS2TcpStream, SocketError> {
         WS2TcpStream stream{};
 

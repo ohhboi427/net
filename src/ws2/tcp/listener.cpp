@@ -10,6 +10,9 @@
 #pragma comment(lib, "ws2_32.lib")
 
 namespace net {
+    WS2TcpListener::WS2TcpListener(WS2Socket&& socket) noexcept
+        : m_socket{ std::move(socket) } {}
+
     auto WS2TcpListener::bind(const IPv4Address address) noexcept -> std::expected<WS2TcpListener, SocketError> {
         WS2TcpListener listener{};
 
@@ -42,6 +45,15 @@ namespace net {
         return listener;
     }
 
+    auto WS2TcpListener::accept() const noexcept -> std::expected<WS2TcpStream, SocketError> {
+        const SOCKET socket = ::accept(static_cast<SOCKET>(m_socket), nullptr, nullptr);
+        if(socket == INVALID_SOCKET) {
+            return std::unexpected(SocketError::ConnectionFailed);
+        }
+
+        return WS2TcpStream(WS2Socket(socket));
+    }
+
     auto TcpListener::bind(const IPv4Address address) noexcept -> std::expected<TcpListener, SocketError> {
         TcpListener listener{};
 
@@ -58,6 +70,25 @@ namespace net {
         };
 
         return listener;
+    }
+
+    auto TcpListener::accept() const noexcept -> std::expected<TcpStream, SocketError> {
+        auto& listener = *static_cast<WS2TcpListener*>(m_impl.get());
+
+        auto ws2_stream = listener.accept();
+        if(!ws2_stream) {
+            return std::unexpected(ws2_stream.error());
+        }
+
+        TcpStream stream{};
+        stream.m_impl = {
+            new WS2TcpStream(std::move(ws2_stream).value()),
+            [](void* const ptr) noexcept -> void {
+                delete static_cast<WS2TcpStream*>(ptr);
+            }
+        };
+
+        return stream;
     }
 }
 

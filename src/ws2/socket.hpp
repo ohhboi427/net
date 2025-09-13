@@ -11,6 +11,7 @@ namespace net {
     class WS2Socket {
     public:
         WS2Socket() = default;
+        explicit WS2Socket(SOCKET handle) noexcept;
 
         WS2Socket(WS2Socket&& other) noexcept;
 

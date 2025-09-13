@@ -8,6 +8,8 @@
 
 namespace net {
     class TcpStream {
+        friend class TcpListener;
+
     public:
         [[nodiscard]] static auto connect(IPv4Address address) noexcept -> std::expected<TcpStream, SocketError>;
 
