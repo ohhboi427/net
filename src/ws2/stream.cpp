@@ -2,7 +2,6 @@
 #include <ws2/stream.hpp>
 
 #include <bit>
-#include <format>
 #include <utility>
 
 #include <WinSock2.h>
@@ -50,7 +49,7 @@ namespace net {
         stream.m_impl = {
             new WS2Stream(std::move(ws2_stream).value()),
             [](void* const ptr) noexcept -> void {
-                delete static_cast<WS2Socket*>(ptr);
+                delete static_cast<WS2Stream*>(ptr);
             }
         };
 

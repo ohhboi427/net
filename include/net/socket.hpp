@@ -8,6 +8,7 @@
 namespace net {
     enum class SocketError {
         CreationFailed,
+        BindingFailed,
         ConnectionFailed,
     };
 
@@ -30,6 +31,8 @@ struct std::formatter<net::SocketError, CharT> {
         switch(error) {
         case net::SocketError::CreationFailed:
             return std::format_to(ctx.out(), "Failed to create the socket!");
+        case net::SocketError::BindingFailed:
+            return std::format_to(ctx.out(), "Failed to bind to the specified address!");
         case net::SocketError::ConnectionFailed:
             return std::format_to(ctx.out(), "Failed to connect to the specified address!");
         }
