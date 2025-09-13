@@ -1,16 +1,13 @@
 #include <net/address.hpp>
+#include <net/bit.hpp>
 #include <net/defines.hpp>
 #include <net/tcp/stream.hpp>
 
 #include <print>
-#include <span>
 
 using namespace net::primitives;
-using namespace net::literals;
-
-[[nodiscard]] constexpr auto operator""_b(const char* ptr, const usize size) noexcept -> std::span<const u8> {
-    return { reinterpret_cast<const u8*>(ptr), size + 1U /* Include the '\0' */ }; // NOLINT
-}
+using namespace net::literals::address;
+using namespace net::literals::bit;
 
 auto main() -> i32 {
     auto stream_result = net::TcpStream::connect("127.0.0.1:8080"_v4);

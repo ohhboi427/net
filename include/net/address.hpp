@@ -1,10 +1,10 @@
 #pragma once
 
+#include <net/bit.hpp>
 #include <net/defines.hpp>
 #include <net/utils/parse.hpp>
 
 #include <array>
-#include <bit>
 #include <expected>
 #include <format>
 #include <string_view>
@@ -61,12 +61,12 @@ namespace net {
             return std::unexpected(port.error());
         }
 
-        v4.port_be = std::byteswap(port.value());
+        v4.port_be = host_to_net(port.value());
 
         return v4;
     }
 
-    namespace literals {
+    namespace literals::inline address {
         [[nodiscard]] consteval auto operator""_v4(const char* str, usize length) -> IPv4Address;
 
         consteval auto operator""_v4(const char* str, [[maybe_unused]] const usize length) -> IPv4Address {
@@ -132,7 +132,7 @@ struct std::formatter<net::IPv4Address, CharT> {
             return std::format_to(
                 ctx.out(),
                 "{}",
-                std::byteswap(addr.port_be)
+                net::net_to_host(addr.port_be)
             );
 
         case Mode::Default:
