@@ -1,9 +1,9 @@
 #pragma once
 #if defined(_WIN32)
 
-#include <WinSock2.h>
-
 #include <expected>
+
+#include <WinSock2.h>
 
 namespace net {
     class WS2Context {

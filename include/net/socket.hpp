@@ -8,12 +8,11 @@
 namespace net {
     enum class SocketError {
         CreationFailed,
+        ConnectionFailed,
     };
 
     class Socket {
     public:
-        Socket() = default;
-
         [[nodiscard]] static auto create() noexcept -> std::expected<Socket, SocketError>;
 
     private:
@@ -31,6 +30,8 @@ struct std::formatter<net::SocketError, CharT> {
         switch(error) {
         case net::SocketError::CreationFailed:
             return std::format_to(ctx.out(), "Failed to create the socket!");
+        case net::SocketError::ConnectionFailed:
+            return std::format_to(ctx.out(), "Failed to connect to the specified address!");
         }
 
         std::unreachable();

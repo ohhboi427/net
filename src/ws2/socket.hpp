@@ -3,9 +3,9 @@
 
 #include <net/socket.hpp>
 
-#include <WinSock2.h>
-
 #include <expected>
+
+#include <WinSock2.h>
 
 namespace net {
     class WS2Socket {
@@ -19,6 +19,10 @@ namespace net {
         auto operator=(WS2Socket&& other) noexcept -> WS2Socket&;
 
         [[nodiscard]] static auto create() noexcept -> std::expected<WS2Socket, SocketError>;
+
+        [[nodiscard]] explicit operator SOCKET() const noexcept {
+            return m_handle;
+        }
 
     private:
         SOCKET m_handle = INVALID_SOCKET;
