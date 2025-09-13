@@ -1,5 +1,5 @@
 #if defined(_WIN32)
-#include <ws2/listener.hpp>
+#include <ws2/tcp/listener.hpp>
 
 #include <bit>
 #include <utility>
@@ -10,10 +10,10 @@
 #pragma comment(lib, "ws2_32.lib")
 
 namespace net {
-    auto WS2Listener::bind(const IPv4Address address) noexcept -> std::expected<WS2Listener, SocketError> {
-        WS2Listener listener{};
+    auto WS2TcpListener::bind(const IPv4Address address) noexcept -> std::expected<WS2TcpListener, SocketError> {
+        WS2TcpListener listener{};
 
-        auto socket = WS2Socket::create();
+        auto socket = WS2Socket::create(SocketType::Tcp);
         if(!socket) {
             return std::unexpected(socket.error());
         }
@@ -42,18 +42,18 @@ namespace net {
         return listener;
     }
 
-    auto Listener::bind(const IPv4Address address) noexcept -> std::expected<Listener, SocketError> {
-        Listener listener{};
+    auto TcpListener::bind(const IPv4Address address) noexcept -> std::expected<TcpListener, SocketError> {
+        TcpListener listener{};
 
-        auto ws2_listener = WS2Listener::bind(address);
+        auto ws2_listener = WS2TcpListener::bind(address);
         if(!ws2_listener) {
             return std::unexpected(ws2_listener.error());
         }
 
         listener.m_impl = {
-            new WS2Listener(std::move(ws2_listener).value()),
+            new WS2TcpListener(std::move(ws2_listener).value()),
             [](void* const ptr) noexcept -> void {
-                delete static_cast<WS2Listener*>(ptr);
+                delete static_cast<WS2TcpListener*>(ptr);
             }
         };
 

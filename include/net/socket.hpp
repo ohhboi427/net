@@ -12,9 +12,14 @@ namespace net {
         ConnectionFailed,
     };
 
+    enum class SocketType {
+        Tcp,
+        Udp,
+    };
+
     class Socket {
     public:
-        [[nodiscard]] static auto create() noexcept -> std::expected<Socket, SocketError>;
+        [[nodiscard]] static auto create(SocketType type) noexcept -> std::expected<Socket, SocketError>;
 
     private:
         std::unique_ptr<void, void(*)(void*)> m_impl{ nullptr, nullptr };

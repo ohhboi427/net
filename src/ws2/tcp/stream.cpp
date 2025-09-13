@@ -1,5 +1,5 @@
 #if defined(_WIN32)
-#include <ws2/stream.hpp>
+#include <ws2/tcp/stream.hpp>
 
 #include <bit>
 #include <utility>
@@ -10,10 +10,10 @@
 #pragma comment(lib, "ws2_32.lib")
 
 namespace net {
-    auto WS2Stream::connect(const IPv4Address address) noexcept -> std::expected<WS2Stream, SocketError> {
-        WS2Stream stream{};
+    auto WS2TcpStream::connect(const IPv4Address address) noexcept -> std::expected<WS2TcpStream, SocketError> {
+        WS2TcpStream stream{};
 
-        auto socket = WS2Socket::create();
+        auto socket = WS2Socket::create(SocketType::Tcp);
         if(!socket) {
             return std::unexpected(socket.error());
         }
@@ -38,18 +38,18 @@ namespace net {
         return stream;
     }
 
-    auto Stream::connect(const IPv4Address address) noexcept -> std::expected<Stream, SocketError> {
-        Stream stream{};
+    auto TcpStream::connect(const IPv4Address address) noexcept -> std::expected<TcpStream, SocketError> {
+        TcpStream stream{};
 
-        auto ws2_stream = WS2Stream::connect(address);
+        auto ws2_stream = WS2TcpStream::connect(address);
         if(!ws2_stream) {
             return std::unexpected(ws2_stream.error());
         }
 
         stream.m_impl = {
-            new WS2Stream(std::move(ws2_stream).value()),
+            new WS2TcpStream(std::move(ws2_stream).value()),
             [](void* const ptr) noexcept -> void {
-                delete static_cast<WS2Stream*>(ptr);
+                delete static_cast<WS2TcpStream*>(ptr);
             }
         };
 

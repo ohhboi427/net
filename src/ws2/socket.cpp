@@ -10,7 +10,31 @@
 #pragma comment(lib, "ws2_32.lib")
 
 namespace net {
-    auto WS2Socket::create() noexcept -> std::expected<WS2Socket, SocketError> {
+    namespace {
+        [[nodiscard]] constexpr auto socket_type(const SocketType type) noexcept -> int {
+            switch(type) {
+            case SocketType::Tcp:
+                return SOCK_STREAM;
+            case SocketType::Udp:
+                return SOCK_DGRAM;
+            }
+
+            std::unreachable();
+        }
+
+        [[nodiscard]] constexpr auto socket_protocol(const SocketType type) noexcept -> int {
+            switch(type) {
+            case SocketType::Tcp:
+                return IPPROTO_TCP;
+            case SocketType::Udp:
+                return IPPROTO_UDP;
+            }
+
+            std::unreachable();
+        }
+    }
+
+    auto WS2Socket::create(const SocketType type) noexcept -> std::expected<WS2Socket, SocketError> {
         static auto context = WS2Context::create();
         if(!context) {
             return std::unexpected(SocketError::CreationFailed);
@@ -18,7 +42,7 @@ namespace net {
 
         WS2Socket socket{};
 
-        socket.m_handle = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+        socket.m_handle = ::socket(AF_INET, socket_type(type), socket_protocol(type));
         if(socket.m_handle == INVALID_SOCKET) {
             return std::unexpected(SocketError::CreationFailed);
         }
@@ -47,10 +71,10 @@ namespace net {
         return *this;
     }
 
-    auto Socket::create() noexcept -> std::expected<Socket, SocketError> {
+    auto Socket::create(const SocketType type) noexcept -> std::expected<Socket, SocketError> {
         Socket socket{};
 
-        auto ws2_socket = WS2Socket::create();
+        auto ws2_socket = WS2Socket::create(type);
         if(!ws2_socket) {
             return std::unexpected(ws2_socket.error());
         }
