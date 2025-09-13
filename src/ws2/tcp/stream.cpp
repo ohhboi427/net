@@ -41,6 +41,38 @@ namespace net {
         return stream;
     }
 
+    auto WS2TcpStream::write(const std::span<const u8> data) const noexcept -> std::expected<usize, SocketError> {
+        const isize bytes_sent = send(
+            static_cast<SOCKET>(m_socket),
+            reinterpret_cast<const char*>(data.data()),
+            data.size(),
+            0
+        );
+
+        if(bytes_sent == SOCKET_ERROR) {
+            // TODO: Handle specific errors differently.
+
+            return std::unexpected(SocketError::TimedOut);
+        }
+
+        return static_cast<usize>(bytes_sent);
+    }
+
+    auto WS2TcpStream::read(const std::span<u8> buffer) const noexcept -> std::expected<usize, SocketError> {
+        const isize bytes_received = recv(
+            static_cast<SOCKET>(m_socket),
+            reinterpret_cast<char*>(buffer.data()),
+            buffer.size(),
+            0
+        );
+
+        if(bytes_received == SOCKET_ERROR) {
+            return std::unexpected(SocketError::TimedOut);
+        }
+
+        return static_cast<usize>(bytes_received);
+    }
+
     auto TcpStream::connect(const IPv4Address address) noexcept -> std::expected<TcpStream, SocketError> {
         TcpStream stream{};
 
@@ -57,6 +89,18 @@ namespace net {
         };
 
         return stream;
+    }
+
+    auto TcpStream::write(const std::span<const u8> data) const noexcept -> std::expected<usize, SocketError> {
+        const auto& stream = *static_cast<WS2TcpStream*>(m_impl.get());
+
+        return stream.write(data);
+    }
+
+    auto TcpStream::read(const std::span<u8> buffer) const noexcept -> std::expected<usize, SocketError> {
+        const auto& stream = *static_cast<WS2TcpStream*>(m_impl.get());
+
+        return stream.read(buffer);
     }
 }
 

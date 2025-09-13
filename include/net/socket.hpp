@@ -10,6 +10,7 @@ namespace net {
         CreationFailed,
         BindingFailed,
         ConnectionFailed,
+        TimedOut,
     };
 
     enum class SocketType {
@@ -40,6 +41,8 @@ struct std::formatter<net::SocketError, CharT> {
             return std::format_to(ctx.out(), "Failed to bind to the specified address!");
         case net::SocketError::ConnectionFailed:
             return std::format_to(ctx.out(), "Failed to connect to the specified address!");
+        case net::SocketError::TimedOut:
+            return std::format_to(ctx.out(), "The operation timed out!");
         }
 
         std::unreachable();

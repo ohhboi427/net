@@ -2,6 +2,7 @@
 #include <net/defines.hpp>
 #include <net/tcp/listener.hpp>
 
+#include <array>
 #include <print>
 
 using namespace net::primitives;
@@ -25,6 +26,23 @@ auto main() -> i32 {
             break;
         }
 
-        std::println("New connection!");
+        const auto stream = std::move(stream_result).value();
+
+        while(true) {
+            static std::array<u8, 512U> buffer;
+            auto bytes_received_result = stream.read(buffer);
+
+            if(!bytes_received_result) {
+                std::println("{}", stream_result.error());
+
+                break;
+            }
+
+            if(bytes_received_result.value() == 0U) {
+                break;
+            }
+
+            std::println("{}", reinterpret_cast<const char*>(buffer.data()));
+        }
     }
 }
