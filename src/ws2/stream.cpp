@@ -23,7 +23,7 @@ namespace net {
 
         const sockaddr_in addr{
             .sin_family = AF_INET,
-            .sin_port = std::byteswap(address.port),
+            .sin_port = address.port_be,
             .sin_addr = std::bit_cast<IN_ADDR>(address.address),
             .sin_zero = {},
         };

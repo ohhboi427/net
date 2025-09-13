@@ -4,6 +4,7 @@
 #include <net/utils/parse.hpp>
 
 #include <array>
+#include <bit>
 #include <expected>
 #include <format>
 #include <string_view>
@@ -16,7 +17,7 @@ namespace net {
             u32 value_be;
         } address;
 
-        u16 port = 0U;
+        u16 port_be = 0U;
 
         [[nodiscard]] static constexpr auto parse(
             std::string_view str
@@ -60,7 +61,7 @@ namespace net {
             return std::unexpected(port.error());
         }
 
-        v4.port = port.value();
+        v4.port_be = std::byteswap(port.value());
 
         return v4;
     }
@@ -131,7 +132,7 @@ struct std::formatter<net::IPv4Address, CharT> {
             return std::format_to(
                 ctx.out(),
                 "{}",
-                addr.port
+                std::byteswap(addr.port_be)
             );
 
         case Mode::Default:
