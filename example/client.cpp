@@ -4,12 +4,15 @@
 #include <net/tcp/stream.hpp>
 
 #include <print>
+#include <string>
 
 #include <cstdlib>
 
 using namespace net::primitives;
 using namespace net::literals::address;
 using namespace net::literals::bit;
+
+using namespace std::literals::string_literals;
 
 auto main() -> i32 {
     auto stream_result = net::TcpStream::connect("127.0.0.1:8080"_v4);
@@ -21,8 +24,7 @@ auto main() -> i32 {
 
     const auto stream = std::move(stream_result).value();
 
-    auto bytes_sent = stream.write("Hello, World!"_b);
-    if(!bytes_sent) {
-        std::println("{}", bytes_sent.error());
+    if(const auto result = stream.write_object("Hello, World!"s); !result) {
+        std::println("{}", result.error());
     }
 }

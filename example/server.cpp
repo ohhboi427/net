@@ -2,8 +2,8 @@
 #include <net/defines.hpp>
 #include <net/tcp/listener.hpp>
 
-#include <array>
 #include <print>
+#include <string>
 
 #include <cstdlib>
 
@@ -31,15 +31,14 @@ auto main() -> i32 {
         const auto stream = std::move(stream_result).value();
 
         while(true) {
-            std::array<u8, 512U> buffer{};
-
-            if(const auto result = stream.read(buffer); !result) {
-                std::println("{}", result.error());
+            auto message = stream.read_object<std::string>();
+            if(!message) {
+                std::println("{}", message.error());
 
                 break;
             }
 
-            std::println("{}", reinterpret_cast<const char*>(buffer.data()));
+            std::println("{}", message.value());
         }
     }
 }
