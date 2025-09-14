@@ -5,6 +5,8 @@
 #include <array>
 #include <print>
 
+#include <cstdlib>
+
 using namespace net::primitives;
 using namespace net::literals;
 
@@ -13,7 +15,7 @@ auto main() -> i32 {
     if(!listener_result) {
         std::println("{}", listener_result.error());
 
-        return 0;
+        return EXIT_FAILURE;
     }
 
     const auto listener = std::move(listener_result).value();

@@ -5,6 +5,8 @@
 
 #include <print>
 
+#include <cstdlib>
+
 using namespace net::primitives;
 using namespace net::literals::address;
 using namespace net::literals::bit;
@@ -14,7 +16,7 @@ auto main() -> i32 {
     if(!stream_result) {
         std::println("{}", stream_result.error());
 
-        return 0;
+        return EXIT_FAILURE;
     }
 
     const auto stream = std::move(stream_result).value();
