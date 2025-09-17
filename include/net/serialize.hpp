@@ -21,9 +21,13 @@ namespace net {
 
     template<typename T>
     concept Serializable = requires(const T object, const std::span<const u8> buffer) {
-        { Serializer<T>::SIZE } -> std::convertible_to<usize>;
         { Serializer<T>::serialize(object) } -> std::convertible_to<std::span<const u8>>;
         { Serializer<T>::deserialize(buffer) } -> std::same_as<std::expected<T, SocketError>>;
+    };
+
+    template<typename T>
+    concept SizedSerializable = Serializable<T> && requires {
+        { Serializer<T>::SIZE } -> std::convertible_to<usize>;
     };
 
     template<typename T>
@@ -60,8 +64,6 @@ namespace net {
 
     template<>
     struct Serializer<std::string> {
-        static constexpr usize SIZE = 0U;
-
         [[nodiscard]] static auto serialize(std::string_view str) noexcept -> std::vector<u8>;
         [[nodiscard]] static auto deserialize(
             std::span<const u8> buffer

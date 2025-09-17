@@ -40,7 +40,7 @@ namespace net {
     auto TcpStream::write_object(const T& object) const noexcept -> std::expected<void, SocketError> {
         using Ser = Serializer<T>;
 
-        if constexpr(Ser::SIZE != 0U) { // Fixed size.
+        if constexpr(SizedSerializable<T>) { // Fixed size.
             const auto data = Ser::serialize(object);
 
             if(const auto result = write_all(data); !result) {
@@ -71,7 +71,7 @@ namespace net {
     auto TcpStream::read_object() const noexcept -> std::expected<T, SocketError> {
         using Ser = Serializer<T>;
 
-        if constexpr(Ser::SIZE != 0U) { // Fixed size
+        if constexpr(SizedSerializable<T>) { // Fixed size
             std::array<u8, Ser::SIZE> buffer{};
 
             if(const auto result = read_exact(buffer); !result) {
