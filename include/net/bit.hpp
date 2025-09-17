@@ -84,10 +84,10 @@ namespace net {
 
     namespace literals::inline bit {
         /**
-         * Converts a string literal to a span of bytes. The length of the span includes the null terminator.
+         * Converts a string literal to a span of bytes.
          *
          * @param ptr The pointer to the string literal.
-         * @param size The length of the string literal excluding the null terminator.
+         * @param size The length of the string literal.
          *
          * @return A span over the string literal.
          */
@@ -97,7 +97,7 @@ namespace net {
             const char* const ptr,
             const usize size
         ) noexcept -> std::span<const u8> {
-            return { reinterpret_cast<const u8*>(ptr), size + 1U /* Include the '\0' */ }; // NOLINT
+            return { reinterpret_cast<const u8*>(ptr), size }; // NOLINT
         }
     }
 }
