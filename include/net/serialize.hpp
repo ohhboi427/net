@@ -64,6 +64,8 @@ namespace net {
 
     template<>
     struct Serializer<std::string> {
+        static constexpr usize SIZE = 13U;
+
         [[nodiscard]] static auto serialize(std::string_view str) noexcept -> std::vector<u8>;
         [[nodiscard]] static auto deserialize(
             std::span<const u8> buffer

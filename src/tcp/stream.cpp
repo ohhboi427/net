@@ -22,6 +22,14 @@ namespace net {
         while(all_bytes_received < buffer.size()) {
             const auto bytes_received = read(buffer.subspan(all_bytes_received));
             if(!bytes_received) {
+                if(
+                    bytes_received.error() == SocketError::ConnectionClosed
+                    && all_bytes_received < buffer.size()
+                    && all_bytes_received != 0U
+                ) {
+                    return std::unexpected(SocketError::ConnectionInterrupted);
+                }
+
                 return std::unexpected(bytes_received.error());
             }
 

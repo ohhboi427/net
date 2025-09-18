@@ -9,9 +9,10 @@ namespace net {
     enum class SocketError {
         CreationFailed,
         BindingFailed,
-        ConnectionFailed,
-        TimedOut,
         ConnectionClosed,
+        ConnectionFailed,
+        ConnectionInterrupted,
+        TimedOut,
         InvalidMessage,
     };
 
@@ -41,12 +42,14 @@ struct std::formatter<net::SocketError, CharT> {
             return std::format_to(ctx.out(), "Failed to create the socket!");
         case net::SocketError::BindingFailed:
             return std::format_to(ctx.out(), "Failed to bind to the specified address!");
-        case net::SocketError::ConnectionFailed:
-            return std::format_to(ctx.out(), "Failed to connect to the specified address!");
-        case net::SocketError::TimedOut:
-            return std::format_to(ctx.out(), "The operation timed out!");
         case net::SocketError::ConnectionClosed:
             return std::format_to(ctx.out(), "The connection has been closed!");
+        case net::SocketError::ConnectionFailed:
+            return std::format_to(ctx.out(), "Failed to connect to the specified address!");
+        case net::SocketError::ConnectionInterrupted:
+            return std::format_to(ctx.out(), "The connection has been interrupted!");
+        case net::SocketError::TimedOut:
+            return std::format_to(ctx.out(), "The operation timed out!");
         case net::SocketError::InvalidMessage:
             return std::format_to(ctx.out(), "The received message is invalid!");
         }
