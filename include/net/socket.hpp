@@ -2,7 +2,9 @@
 
 #include <net/defines.hpp>
 
+#include <array>
 #include <expected>
+#include <tuple>
 
 namespace net {
     enum class SocketProtocol {
@@ -12,6 +14,13 @@ namespace net {
 
     enum class SocketError {
         CreationFailed,
+        ConnectionFailed,
+        BindingFailed,
+    };
+
+    struct SocketAddr {
+        std::array<u8, 4U> address{};
+        u16 port{};
     };
 
     class Socket {
@@ -20,9 +29,9 @@ namespace net {
 
         [[nodiscard]] static auto create(SocketProtocol protocol) -> std::expected<Socket, SocketError>;
 
-        [[nodiscard]] auto connect() const noexcept -> std::expected<void, SocketError>;
-        [[nodiscard]] auto bind() const noexcept -> std::expected<void, SocketError>;
-        [[nodiscard]] auto accept() const noexcept -> std::expected<Socket, SocketError>;
+        [[nodiscard]] auto connect(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
+        [[nodiscard]] auto bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
+        [[nodiscard]] auto accept() const noexcept -> std::expected<std::tuple<Socket, SocketAddr>, SocketError>;
 
     private:
         Impl m_impl{ nullptr, nullptr };

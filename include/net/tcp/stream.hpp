@@ -12,7 +12,7 @@ namespace net {
     public:
         TcpStream(TcpStream&&) noexcept = default;
 
-        [[nodiscard]] static auto connect() -> std::expected<TcpStream, SocketError>;
+        [[nodiscard]] static auto connect(const SocketAddr& addr) -> std::expected<TcpStream, SocketError>;
 
     private:
         Socket m_socket;
