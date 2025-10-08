@@ -15,6 +15,10 @@ namespace net {
 
         [[nodiscard]] static auto create(SocketProtocol protocol) -> std::expected<WS2Socket, SocketError>;
 
+        [[nodiscard]] auto connect() const noexcept -> std::expected<void, SocketError>;
+        [[nodiscard]] auto bind() const noexcept -> std::expected<void, SocketError>;
+        [[nodiscard]] auto accept() const noexcept -> std::expected<WS2Socket, SocketError>;
+
     private:
         SOCKET m_socket = INVALID_SOCKET;
 

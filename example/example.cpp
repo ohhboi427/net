@@ -1,13 +1,12 @@
 #include <net/defines.hpp>
-#include <net/socket.hpp>
-
-#include <print>
+#include <net/tcp/listener.hpp>
 
 using namespace net;
 
 auto main() -> i32 {
-    const auto socket_result = Socket::create(SocketProtocol::Tcp);
-    if(!socket_result) {
-        std::println("Failed to create socket!");
+    const auto listener = TcpListener::bind().value();
+
+    while(true) { // NOLINT
+        const auto stream = listener.accept().value();
     }
 }

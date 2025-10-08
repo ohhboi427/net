@@ -2,6 +2,7 @@
 
 #include <net/defines.hpp>
 #include <net/socket.hpp>
+#include <net/tcp/stream.hpp>
 
 #include <expected>
 
@@ -10,7 +11,9 @@ namespace net {
     public:
         TcpListener(TcpListener&&) noexcept = default;
 
-        [[nodiscard]] static auto create() -> std::expected<TcpListener, SocketError>;
+        [[nodiscard]] static auto bind() -> std::expected<TcpListener, SocketError>;
+
+        [[nodiscard]] auto accept() const noexcept -> std::expected<TcpStream, SocketError>;
 
     private:
         Socket m_socket;

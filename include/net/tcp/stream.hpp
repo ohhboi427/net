@@ -7,10 +7,12 @@
 
 namespace net {
     class TcpStream {
+        friend class TcpListener;
+
     public:
         TcpStream(TcpStream&&) noexcept = default;
 
-        [[nodiscard]] static auto create() -> std::expected<TcpStream, SocketError>;
+        [[nodiscard]] static auto connect() -> std::expected<TcpStream, SocketError>;
 
     private:
         Socket m_socket;

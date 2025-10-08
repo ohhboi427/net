@@ -20,6 +20,10 @@ namespace net {
 
         [[nodiscard]] static auto create(SocketProtocol protocol) -> std::expected<Socket, SocketError>;
 
+        [[nodiscard]] auto connect() const noexcept -> std::expected<void, SocketError>;
+        [[nodiscard]] auto bind() const noexcept -> std::expected<void, SocketError>;
+        [[nodiscard]] auto accept() const noexcept -> std::expected<Socket, SocketError>;
+
     private:
         Impl m_impl{ nullptr, nullptr };
 

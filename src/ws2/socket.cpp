@@ -56,8 +56,62 @@ namespace net {
         return socket;
     }
 
+    auto WS2Socket::connect() const noexcept -> std::expected<void, SocketError> {
+        if(const auto result = ::connect(m_socket, {}, {}); result == SOCKET_ERROR) {
+            return std::unexpected(SocketError::CreationFailed);
+        }
+
+        return {};
+    }
+
+    auto WS2Socket::bind() const noexcept -> std::expected<void, SocketError> {
+        if(const auto result = ::bind(m_socket, {}, {}); result == SOCKET_ERROR) {
+            return std::unexpected(SocketError::CreationFailed);
+        }
+
+        return {};
+    }
+
+    auto WS2Socket::accept() const noexcept -> std::expected<WS2Socket, SocketError> {
+        const SOCKET handle = ::accept(m_socket, {}, {});
+        if(handle == INVALID_SOCKET) {
+            return std::unexpected(SocketError::CreationFailed);
+        }
+
+        WS2Socket socket{};
+        socket.m_socket = handle;
+
+        return socket;
+    }
+
     auto Socket::create(const SocketProtocol protocol) -> std::expected<Socket, SocketError> {
         auto socket_impl_result = WS2Socket::create(protocol);
+        if(!socket_impl_result) {
+            return std::unexpected(socket_impl_result.error());
+        }
+
+        Socket socket{};
+        socket.m_impl = make_impl<WS2Socket>(std::move(socket_impl_result).value());
+
+        return socket;
+    }
+
+    auto Socket::connect() const noexcept -> std::expected<void, SocketError> {
+        const auto& impl = *static_cast<WS2Socket*>(m_impl.get());
+
+        return impl.connect();
+    }
+
+    auto Socket::bind() const noexcept -> std::expected<void, SocketError> {
+        const auto& impl = *static_cast<WS2Socket*>(m_impl.get());
+
+        return impl.bind();
+    }
+
+    auto Socket::accept() const noexcept -> std::expected<Socket, SocketError> {
+        const auto& impl = *static_cast<WS2Socket*>(m_impl.get());
+
+        auto socket_impl_result = impl.accept();
         if(!socket_impl_result) {
             return std::unexpected(socket_impl_result.error());
         }

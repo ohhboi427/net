@@ -6,7 +6,7 @@ namespace net {
     TcpStream::TcpStream(Socket&& socket) noexcept
         : m_socket{ std::move(socket) } {}
 
-    auto TcpStream::create() -> std::expected<TcpStream, SocketError> {
+    auto TcpStream::connect() -> std::expected<TcpStream, SocketError> {
         auto socket_result = Socket::create(SocketProtocol::Tcp);
         if(!socket_result) {
             return std::unexpected(socket_result.error());
