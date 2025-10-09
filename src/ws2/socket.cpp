@@ -6,7 +6,6 @@
 #include <ws2/context.hpp>
 
 #include <bit>
-#include <utility>
 
 #pragma comment(lib, "ws2_32.lib")
 

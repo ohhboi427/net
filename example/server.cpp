@@ -13,7 +13,7 @@ using namespace net;
 auto main() -> i32 {
     auto listener_result = TcpListener::bind({ .address = { 0, 0, 0, 0 }, .port = 8080 });
     if(!listener_result) {
-        std::println("Failed to bind");
+        std::println(stderr, "{}", listener_result.error());
 
         return -1;
     }
@@ -32,11 +32,13 @@ auto main() -> i32 {
                     break;
                 }
 
+                std::println(stderr, "{}", read_result.error());
+
                 return -1;
             }
 
             const std::string_view message(std::bit_cast<const char*>(&buffer[0U]), read_result.value());
-            std::println("<{}:{}>: {}", addr.address, addr.port, message);
+            std::println("{}: {}", addr, message);
         }
     }
 }
