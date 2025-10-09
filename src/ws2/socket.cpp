@@ -1,6 +1,8 @@
 #if defined(_WIN32)
 #include <ws2/socket.hpp>
 
+#include <net/bit.hpp>
+
 #include <ws2/context.hpp>
 
 #include <bit>
@@ -60,7 +62,7 @@ namespace net {
     auto WS2Socket::connect(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError> {
         const sockaddr_in addr_info{
             .sin_family = AF_INET,
-            .sin_port = htons(addr.port),
+            .sin_port = host_to_net(addr.port),
             .sin_addr = std::bit_cast<IN_ADDR>(addr.address),
             .sin_zero = {},
         };
@@ -79,7 +81,7 @@ namespace net {
     auto WS2Socket::bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError> {
         const sockaddr_in addr_info{
             .sin_family = AF_INET,
-            .sin_port = htons(addr.port),
+            .sin_port = host_to_net(addr.port),
             .sin_addr = std::bit_cast<IN_ADDR>(addr.address),
             .sin_zero = {},
         };
@@ -113,7 +115,7 @@ namespace net {
 
         const SocketAddr addr{
             .address = std::bit_cast<std::array<u8, 4U>>(addr_info.sin_addr),
-            .port = ntohs(addr_info.sin_port),
+            .port = net_to_host(addr_info.sin_port),
         };
 
         return std::tuple{ std::move(socket), addr };
