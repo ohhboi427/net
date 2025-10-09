@@ -22,8 +22,8 @@ namespace net {
         [[nodiscard]] auto bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
         [[nodiscard]] auto accept() const noexcept -> std::expected<std::tuple<WS2Socket, SocketAddr>, SocketError>;
 
-        [[nodiscard]] auto write(std::span<const u8> data) const noexcept -> std::expected<usize, SocketError>;
-        [[nodiscard]] auto read(std::span<u8> data) const noexcept -> std::expected<usize, SocketError>;
+        [[nodiscard]] auto write(std::span<const byte> data) const noexcept -> std::expected<usize, SocketError>;
+        [[nodiscard]] auto read(std::span<byte> data) const noexcept -> std::expected<usize, SocketError>;
 
     private:
         SOCKET m_handle = INVALID_SOCKET;

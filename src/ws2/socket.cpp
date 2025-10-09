@@ -69,7 +69,7 @@ namespace net {
 
         if(const auto result = ::connect(
             m_handle,
-            reinterpret_cast<const sockaddr*>(&addr_info),
+            std::bit_cast<const sockaddr*>(&addr_info),
             sizeof(addr_info)
         ); result == SOCKET_ERROR) {
             return std::unexpected(SocketError::ConnectionFailed);
@@ -88,7 +88,7 @@ namespace net {
 
         if(const auto result = ::bind(
             m_handle,
-            reinterpret_cast<const sockaddr*>(&addr_info),
+            std::bit_cast<const sockaddr*>(&addr_info),
             sizeof(addr_info)
         ); result == SOCKET_ERROR) {
             return std::unexpected(SocketError::BindingFailed);
@@ -105,7 +105,7 @@ namespace net {
         sockaddr_in addr_info{};
         i32 addr_info_size = sizeof(addr_info);
 
-        const SOCKET handle = ::accept(m_handle, reinterpret_cast<sockaddr*>(&addr_info), &addr_info_size);
+        const SOCKET handle = ::accept(m_handle, std::bit_cast<sockaddr*>(&addr_info), &addr_info_size);
         if(handle == INVALID_SOCKET) {
             return std::unexpected(SocketError::ConnectionFailed);
         }
@@ -121,10 +121,10 @@ namespace net {
         return std::tuple{ std::move(socket), addr };
     }
 
-    auto WS2Socket::write(const std::span<const u8> data) const noexcept -> std::expected<usize, SocketError> {
+    auto WS2Socket::write(const std::span<const byte> data) const noexcept -> std::expected<usize, SocketError> {
         const auto bytes_written = ::send(
             m_handle,
-            reinterpret_cast<const char*>(data.data()),
+            std::bit_cast<const char*>(data.data()),
             static_cast<i32>(data.size_bytes()),
             0
         );
@@ -136,10 +136,10 @@ namespace net {
         return static_cast<usize>(bytes_written);
     }
 
-    auto WS2Socket::read(const std::span<u8> data) const noexcept -> std::expected<usize, SocketError> {
+    auto WS2Socket::read(const std::span<byte> data) const noexcept -> std::expected<usize, SocketError> {
         const auto bytes_read = ::recv(
             m_handle,
-            reinterpret_cast<char*>(data.data()),
+            std::bit_cast<char*>(data.data()),
             static_cast<i32>(data.size_bytes()),
             0
         );
@@ -195,13 +195,13 @@ namespace net {
         return std::tuple{ std::move(socket), addr };
     }
 
-    auto Socket::write(const std::span<const u8> data) const noexcept -> std::expected<usize, SocketError> {
+    auto Socket::write(const std::span<const byte> data) const noexcept -> std::expected<usize, SocketError> {
         const auto& impl = *static_cast<WS2Socket*>(m_impl.get());
 
         return impl.write(data);
     }
 
-    auto Socket::read(const std::span<u8> data) const noexcept -> std::expected<usize, SocketError> {
+    auto Socket::read(const std::span<byte> data) const noexcept -> std::expected<usize, SocketError> {
         const auto& impl = *static_cast<WS2Socket*>(m_impl.get());
 
         return impl.read(data);

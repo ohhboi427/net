@@ -1,7 +1,11 @@
 #include <net/defines.hpp>
 #include <net/tcp/listener.hpp>
 
+#include <array>
+#include <bit>
 #include <print>
+#include <span>
+#include <string>
 #include <utility>
 
 using namespace net;
@@ -16,9 +20,23 @@ auto main() -> i32 {
 
     const auto listener = std::move(listener_result).value();
 
-    while(true) { // NOLINT
+    while(true) {
         const auto [stream, addr] = listener.accept().value();
 
-        std::println("Connected to {}:{}", addr.address, addr.port);
+        while(true) {
+            std::array<byte, 1024U> buffer{};
+            const auto read_result = stream.read(buffer);
+
+            if(!read_result) {
+                if(read_result.error() == SocketError::ConnectionClosed) {
+                    break;
+                }
+
+                return -1;
+            }
+
+            const std::string_view message(std::bit_cast<const char*>(&buffer[0U]), read_result.value());
+            std::println("<{}:{}>: {}", addr.address, addr.port, message);
+        }
     }
 }

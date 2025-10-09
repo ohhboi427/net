@@ -1,8 +1,10 @@
 #pragma once
 
+#include <net/defines.hpp>
 #include <net/socket.hpp>
 
 #include <expected>
+#include <span>
 
 namespace net {
     class TcpStream {
@@ -12,6 +14,9 @@ namespace net {
         TcpStream(TcpStream&&) noexcept = default;
 
         [[nodiscard]] static auto connect(const SocketAddr& addr) -> std::expected<TcpStream, SocketError>;
+
+        [[nodiscard]] auto write(std::span<const byte> data) const noexcept -> std::expected<usize, SocketError>;
+        [[nodiscard]] auto read(std::span<byte> data) const noexcept -> std::expected<usize, SocketError>;
 
     private:
         Socket m_socket;

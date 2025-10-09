@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <type_traits>
@@ -21,6 +22,8 @@ namespace net {
 
         using f32 = float;
         using f64 = double;
+
+        using byte = std::byte;
     }
 
     using Impl = std::unique_ptr<void, void(*)(void*)>;

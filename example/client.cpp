@@ -1,3 +1,4 @@
+#include <net/bit.hpp>
 #include <net/defines.hpp>
 #include <net/tcp/stream.hpp>
 
@@ -14,5 +15,6 @@ auto main() -> i32 {
         return -1;
     }
 
-    [[maybe_unused]] const auto stream = std::move(stream_result).value();
+    const auto stream = std::move(stream_result).value();
+    [[maybe_unused]] const auto write_result = stream.write("Hello, World!"_b);
 }

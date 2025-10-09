@@ -20,4 +20,12 @@ namespace net {
 
         return stream;
     }
+
+    auto TcpStream::write(const std::span<const byte> data) const noexcept -> std::expected<usize, SocketError> {
+        return m_socket.write(data);
+    }
+
+    auto TcpStream::read(const std::span<byte> data) const noexcept -> std::expected<usize, SocketError> {
+        return m_socket.read(data);
+    }
 }

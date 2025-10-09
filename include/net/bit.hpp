@@ -29,8 +29,8 @@ namespace net {
         [[nodiscard]] constexpr auto operator""_b(
             const char* const ptr,
             const usize size
-        ) noexcept -> std::span<const u8> {
-            return { reinterpret_cast<const u8*>(ptr), size }; // NOLINT
+        ) noexcept -> std::span<const byte> {
+            return { std::bit_cast<const byte*>(ptr), size }; // NOLINT
         }
     }
 }
