@@ -1,6 +1,5 @@
 #pragma once
 
-#include <net/defines.hpp>
 #include <net/socket.hpp>
 
 #include <expected>

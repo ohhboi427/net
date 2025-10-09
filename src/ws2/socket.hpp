@@ -1,9 +1,12 @@
 #pragma once
 #if defined(_WIN32)
 
+#include <net/defines.hpp>
 #include <net/socket.hpp>
 
 #include <expected>
+#include <span>
+#include <tuple>
 
 #include <WinSock2.h>
 
@@ -18,6 +21,9 @@ namespace net {
         [[nodiscard]] auto connect(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
         [[nodiscard]] auto bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
         [[nodiscard]] auto accept() const noexcept -> std::expected<std::tuple<WS2Socket, SocketAddr>, SocketError>;
+
+        [[nodiscard]] auto write(std::span<const u8> data) const noexcept -> std::expected<usize, SocketError>;
+        [[nodiscard]] auto read(std::span<u8> data) const noexcept -> std::expected<usize, SocketError>;
 
     private:
         SOCKET m_handle = INVALID_SOCKET;

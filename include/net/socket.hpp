@@ -4,6 +4,7 @@
 
 #include <array>
 #include <expected>
+#include <span>
 #include <tuple>
 
 namespace net {
@@ -14,8 +15,10 @@ namespace net {
 
     enum class SocketError {
         CreationFailed,
-        ConnectionFailed,
         BindingFailed,
+        ConnectionFailed,
+        ConnectionClosed,
+        TimedOut,
     };
 
     struct SocketAddr {
@@ -32,6 +35,9 @@ namespace net {
         [[nodiscard]] auto connect(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
         [[nodiscard]] auto bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
         [[nodiscard]] auto accept() const noexcept -> std::expected<std::tuple<Socket, SocketAddr>, SocketError>;
+
+        [[nodiscard]] auto write(std::span<const u8> data) const noexcept -> std::expected<usize, SocketError>;
+        [[nodiscard]] auto read(std::span<u8> data) const noexcept -> std::expected<usize, SocketError>;
 
     private:
         Impl m_impl{ nullptr, nullptr };

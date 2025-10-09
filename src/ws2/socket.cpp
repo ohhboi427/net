@@ -119,6 +119,40 @@ namespace net {
         return std::tuple{ std::move(socket), addr };
     }
 
+    auto WS2Socket::write(const std::span<const u8> data) const noexcept -> std::expected<usize, SocketError> {
+        const auto bytes_written = ::send(
+            m_handle,
+            reinterpret_cast<const char*>(data.data()),
+            static_cast<i32>(data.size_bytes()),
+            0
+        );
+
+        if(bytes_written == SOCKET_ERROR) {
+            return std::unexpected(SocketError::TimedOut);
+        }
+
+        return static_cast<usize>(bytes_written);
+    }
+
+    auto WS2Socket::read(const std::span<u8> data) const noexcept -> std::expected<usize, SocketError> {
+        const auto bytes_read = ::recv(
+            m_handle,
+            reinterpret_cast<char*>(data.data()),
+            static_cast<i32>(data.size_bytes()),
+            0
+        );
+
+        if(bytes_read == SOCKET_ERROR) {
+            return std::unexpected(SocketError::TimedOut);
+        }
+
+        if(bytes_read == 0) {
+            return std::unexpected(SocketError::ConnectionClosed);
+        }
+
+        return static_cast<usize>(bytes_read);
+    }
+
     auto Socket::create(const SocketProtocol protocol) -> std::expected<Socket, SocketError> {
         auto socket_impl_result = WS2Socket::create(protocol);
         if(!socket_impl_result) {
@@ -157,6 +191,18 @@ namespace net {
         socket.m_impl = make_impl<WS2Socket>(std::move(socket_impl));
 
         return std::tuple{ std::move(socket), addr };
+    }
+
+    auto Socket::write(const std::span<const u8> data) const noexcept -> std::expected<usize, SocketError> {
+        const auto& impl = *static_cast<WS2Socket*>(m_impl.get());
+
+        return impl.write(data);
+    }
+
+    auto Socket::read(const std::span<u8> data) const noexcept -> std::expected<usize, SocketError> {
+        const auto& impl = *static_cast<WS2Socket*>(m_impl.get());
+
+        return impl.read(data);
     }
 }
 
