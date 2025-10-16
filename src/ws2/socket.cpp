@@ -46,13 +46,13 @@ namespace net {
     auto WS2Socket::create(const SocketProtocol protocol) -> std::expected<WS2Socket, SocketError> {
         static const auto s_context_result = WS2Context::create();
         if(!s_context_result) {
-            return std::unexpected(SocketError::CreationFailed);
+            return std::unexpected{ SocketError::CreationFailed };
         }
 
         WS2Socket socket{};
         socket.m_handle = ::socket(AF_INET, protocol_socket_type(protocol), protocol_socket_protocol(protocol));
         if(socket.m_handle == INVALID_SOCKET) {
-            return std::unexpected(SocketError::CreationFailed);
+            return std::unexpected{ SocketError::CreationFailed };
         }
 
         return socket;
@@ -71,7 +71,7 @@ namespace net {
             std::bit_cast<const sockaddr*>(&addr_info),
             sizeof(addr_info)
         ); result == SOCKET_ERROR) {
-            return std::unexpected(SocketError::ConnectionFailed);
+            return std::unexpected{ SocketError::ConnectionFailed };
         }
 
         return {};
@@ -90,11 +90,11 @@ namespace net {
             std::bit_cast<const sockaddr*>(&addr_info),
             sizeof(addr_info)
         ); result == SOCKET_ERROR) {
-            return std::unexpected(SocketError::BindingFailed);
+            return std::unexpected{ SocketError::BindingFailed };
         }
 
         if(const auto result = ::listen(m_handle, SOMAXCONN); result == SOCKET_ERROR) {
-            return std::unexpected(SocketError::BindingFailed);
+            return std::unexpected{ SocketError::BindingFailed };
         }
 
         return {};
@@ -106,7 +106,7 @@ namespace net {
 
         const SOCKET handle = ::accept(m_handle, std::bit_cast<sockaddr*>(&addr_info), &addr_info_size);
         if(handle == INVALID_SOCKET) {
-            return std::unexpected(SocketError::ConnectionFailed);
+            return std::unexpected{ SocketError::ConnectionFailed };
         }
 
         WS2Socket socket{};
@@ -129,7 +129,7 @@ namespace net {
         );
 
         if(bytes_written == SOCKET_ERROR) {
-            return std::unexpected(SocketError::TimedOut);
+            return std::unexpected{ SocketError::TimedOut };
         }
 
         return static_cast<usize>(bytes_written);
@@ -144,11 +144,11 @@ namespace net {
         );
 
         if(bytes_read == SOCKET_ERROR) {
-            return std::unexpected(SocketError::TimedOut);
+            return std::unexpected{ SocketError::TimedOut };
         }
 
         if(bytes_read == 0) {
-            return std::unexpected(SocketError::ConnectionClosed);
+            return std::unexpected{ SocketError::ConnectionClosed };
         }
 
         return static_cast<usize>(bytes_read);
@@ -157,7 +157,7 @@ namespace net {
     auto Socket::create(const SocketProtocol protocol) -> std::expected<Socket, SocketError> {
         auto socket_impl_result = WS2Socket::create(protocol);
         if(!socket_impl_result) {
-            return std::unexpected(socket_impl_result.error());
+            return std::unexpected{ socket_impl_result.error() };
         }
 
         Socket socket{};
@@ -183,7 +183,7 @@ namespace net {
 
         auto socket_impl_result = impl.accept();
         if(!socket_impl_result) {
-            return std::unexpected(socket_impl_result.error());
+            return std::unexpected{ socket_impl_result.error() };
         }
 
         auto [socket_impl, addr] = std::move(socket_impl_result).value();

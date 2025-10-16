@@ -32,7 +32,7 @@ namespace net {
         requires (std::is_constructible_v<T, Args...> && !std::is_array_v<T>)
     [[nodiscard]] constexpr auto make_impl(Args&&... args) -> Impl {
         return {
-            new T(std::forward<Args>(args)...),
+            new T{ std::forward<Args>(args)... },
             [](void* const ptr) noexcept -> void {
                 delete static_cast<T*>(ptr);
             }

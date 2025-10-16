@@ -19,7 +19,7 @@ namespace net {
         WS2Context context{};
 
         if(const auto result = WSAStartup(MAKEWORD(2U, 2U), &context.m_data); result != 0) {
-            return std::unexpected(result);
+            return std::unexpected{ result };
         }
 
         return context;

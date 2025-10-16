@@ -9,13 +9,13 @@ namespace net {
     auto TcpListener::bind(const SocketAddr& addr) -> std::expected<TcpListener, SocketError> {
         auto socket_result = Socket::create(SocketProtocol::Tcp);
         if(!socket_result) {
-            return std::unexpected(socket_result.error());
+            return std::unexpected{ socket_result.error() };
         }
 
-        TcpListener stream(std::move(socket_result).value());
+        TcpListener stream{ std::move(socket_result).value() };
 
         if(const auto result = stream.m_socket.bind(addr); !result) {
-            return std::unexpected(result.error());
+            return std::unexpected{ result.error() };
         }
 
         return stream;
@@ -24,11 +24,11 @@ namespace net {
     auto TcpListener::accept() const noexcept -> std::expected<std::tuple<TcpStream, SocketAddr>, SocketError> {
         auto socket_result = m_socket.accept();
         if(!socket_result) {
-            return std::unexpected(socket_result.error());
+            return std::unexpected{ socket_result.error() };
         }
 
         auto [socket, addr] = std::move(socket_result).value();
 
-        return std::tuple{ TcpStream(std::move(socket)), addr };
+        return std::tuple{ TcpStream{ std::move(socket) }, addr };
     }
 }
