@@ -44,7 +44,7 @@ namespace net {
     }
 
     auto WS2Socket::create(const SocketProtocol protocol) -> std::expected<WS2Socket, SocketError> {
-        static const auto s_context_result = WS2Context::create();
+        static const auto s_context_result = WS2Context::instance();
         if(!s_context_result) {
             return std::unexpected{ SocketError::CreationFailed };
         }

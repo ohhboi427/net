@@ -13,12 +13,14 @@ namespace net {
         WS2Context(WS2Context&& other) noexcept;
         ~WS2Context() noexcept;
 
-        [[nodiscard]] static auto create() noexcept -> std::expected<WS2Context, i32>;
+        [[nodiscard]] static auto instance() noexcept -> std::expected<void, i32>;
 
     private:
         WSADATA m_data{};
 
         WS2Context() noexcept = default;
+
+        [[nodiscard]] static auto create() noexcept -> std::expected<WS2Context, i32>;
     };
 }
 

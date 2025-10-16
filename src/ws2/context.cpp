@@ -24,6 +24,14 @@ namespace net {
 
         return context;
     }
+
+    auto WS2Context::instance() noexcept -> std::expected<void, i32> {
+        if(static const auto result = create(); !result) {
+            return std::unexpected{ result.error() };
+        }
+
+        return {};
+    }
 }
 
 #endif
