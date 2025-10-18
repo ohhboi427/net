@@ -8,7 +8,7 @@
 using namespace net;
 
 auto main() -> i32 {
-    auto stream_result = TcpStream::connect({ .addr = Ipv4Addr{ 127, 0, 0, 1 }, .port = 8080 });
+    auto stream_result = TcpStream::connect({ .addr = Ipv6Addr{ 0, 0, 0, 0, 0, 0, 0, 1 }, .port = 8080 });
     if(!stream_result) {
         std::println(stderr, "{}", stream_result.error());
 

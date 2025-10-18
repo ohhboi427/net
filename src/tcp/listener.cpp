@@ -7,7 +7,12 @@ namespace net {
         : m_socket{ std::move(socket) } {}
 
     auto TcpListener::bind(const SocketAddr& addr) -> std::expected<TcpListener, SocketError> {
-        auto socket_result = Socket::create(SocketProtocol::Tcp);
+        const SocketConfig config{
+            .address_family = addr.address_family(),
+            .protocol = SocketProtocol::Tcp,
+        };
+
+        auto socket_result = Socket::create(config);
         if(!socket_result) {
             return std::unexpected{ socket_result.error() };
         }

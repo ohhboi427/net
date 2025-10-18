@@ -7,21 +7,19 @@
 #include <format>
 #include <span>
 #include <tuple>
+#include <type_traits>
 #include <utility>
 #include <variant>
 
 namespace net {
+    enum class SocketAddressFamily {
+        Ipv4,
+        Ipv6,
+    };
+
     enum class SocketProtocol {
         Tcp,
         Udp,
-    };
-
-    enum class SocketError {
-        CreationFailed,
-        BindingFailed,
-        ConnectionFailed,
-        ConnectionClosed,
-        TimedOut,
     };
 
     using Ipv4Addr = std::array<u8, 4U>;
@@ -32,13 +30,28 @@ namespace net {
     struct SocketAddr {
         IpAddr addr{};
         u16 port{};
+
+        [[nodiscard]] auto address_family() const noexcept -> SocketAddressFamily;
+    };
+
+    struct SocketConfig {
+        SocketAddressFamily address_family{};
+        SocketProtocol protocol{};
+    };
+
+    enum class SocketError {
+        CreationFailed,
+        BindingFailed,
+        ConnectionFailed,
+        ConnectionClosed,
+        TimedOut,
     };
 
     class Socket {
     public:
         Socket(Socket&&) noexcept = default;
 
-        [[nodiscard]] static auto create(SocketProtocol protocol) -> std::expected<Socket, SocketError>;
+        [[nodiscard]] static auto create(SocketConfig config) -> std::expected<Socket, SocketError>;
 
         [[nodiscard]] auto connect(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
         [[nodiscard]] auto bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;

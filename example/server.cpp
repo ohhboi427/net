@@ -11,7 +11,7 @@
 using namespace net;
 
 auto main() -> i32 {
-    auto listener_result = TcpListener::bind({ .addr = Ipv4Addr{ 0, 0, 0, 0 }, .port = 8080 });
+    auto listener_result = TcpListener::bind({ .addr = Ipv6Addr{}, .port = 8080 });
     if(!listener_result) {
         std::println(stderr, "{}", listener_result.error());
 

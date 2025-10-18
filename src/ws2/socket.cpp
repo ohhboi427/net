@@ -5,14 +5,53 @@
 
 #include <ws2/context.hpp>
 
+#include <algorithm>
 #include <bit>
+#include <type_traits>
 #include <variant>
+
+#include <WS2tcpip.h>
 
 #pragma comment(lib, "ws2_32.lib")
 
 namespace net {
     namespace {
-        [[nodiscard]] constexpr auto protocol_socket_type(const SocketProtocol protocol) noexcept -> i32 {
+        struct WS2SocketAddr {
+            std::variant<sockaddr_in, sockaddr_in6> addr;
+
+            [[nodiscard]] auto as_generic() const noexcept -> std::tuple<const sockaddr*, usize> {
+                return std::visit(
+                    [](const auto& value) noexcept -> std::tuple<const sockaddr*, usize> {
+                        return { reinterpret_cast<const sockaddr*>(&value), sizeof(value) };
+                    },
+                    addr
+                );
+            }
+        };
+
+        [[nodiscard]] constexpr auto convert_address_family(const SocketAddressFamily address_family) noexcept -> i32 {
+            switch(address_family) {
+            case SocketAddressFamily::Ipv4:
+                return AF_INET;
+            case SocketAddressFamily::Ipv6:
+                return AF_INET6;
+            }
+
+            std::unreachable();
+        }
+
+        [[nodiscard]] constexpr auto convert_protocol(const SocketProtocol protocol) noexcept -> i32 {
+            switch(protocol) {
+            case SocketProtocol::Tcp:
+                return IPPROTO_TCP;
+            case SocketProtocol::Udp:
+                return IPPROTO_UDP;
+            }
+
+            std::unreachable();
+        }
+
+        [[nodiscard]] constexpr auto protocol_type(const SocketProtocol protocol) noexcept -> i32 {
             switch(protocol) {
             case SocketProtocol::Tcp:
                 return SOCK_STREAM;
@@ -23,15 +62,41 @@ namespace net {
             std::unreachable();
         }
 
-        [[nodiscard]] constexpr auto protocol_socket_protocol(const SocketProtocol protocol) noexcept -> i32 {
-            switch(protocol) {
-            case SocketProtocol::Tcp:
-                return IPPROTO_TCP;
-            case SocketProtocol::Udp:
-                return IPPROTO_UDP;
-            }
+        [[nodiscard]] constexpr auto convert_addr(const SocketAddr& addr) noexcept -> WS2SocketAddr {
+            return std::visit(
+                [&]<typename T>(const T& value) noexcept -> WS2SocketAddr {
+                    if constexpr(std::is_same_v<T, Ipv4Addr>) {
+                        return {
+                            .addr = sockaddr_in{
+                                .sin_family = AF_INET,
+                                .sin_port = host_to_net(addr.port),
+                                .sin_addr = std::bit_cast<IN_ADDR>(value),
+                                .sin_zero = {},
+                            }
+                        };
+                    } else {
+                        Ipv6Addr addr_net{};
+                        std::ranges::transform(
+                            value,
+                            addr_net.begin(),
+                            [](const u16 hex) noexcept -> u16 {
+                                return host_to_net(hex);
+                            }
+                        );
 
-            std::unreachable();
+                        return {
+                            .addr = sockaddr_in6{
+                                .sin6_family = AF_INET6,
+                                .sin6_port = host_to_net(addr.port),
+                                .sin6_flowinfo = {},
+                                .sin6_addr = std::bit_cast<IN6_ADDR>(addr_net),
+                                .sin6_scope_id = {},
+                            }
+                        };
+                    }
+                },
+                addr.addr
+            );
         }
     }
 
@@ -44,14 +109,19 @@ namespace net {
         }
     }
 
-    auto WS2Socket::create(const SocketProtocol protocol) -> std::expected<WS2Socket, SocketError> {
+    auto WS2Socket::create(const SocketConfig config) -> std::expected<WS2Socket, SocketError> {
         static const auto s_context_result = WS2Context::instance();
         if(!s_context_result) {
             return std::unexpected{ SocketError::CreationFailed };
         }
 
         WS2Socket socket{};
-        socket.m_handle = ::socket(AF_INET, protocol_socket_type(protocol), protocol_socket_protocol(protocol));
+        socket.m_handle = ::socket(
+            convert_address_family(config.address_family),
+            protocol_type(config.protocol),
+            convert_protocol(config.protocol)
+        );
+
         if(socket.m_handle == INVALID_SOCKET) {
             return std::unexpected{ SocketError::CreationFailed };
         }
@@ -60,17 +130,13 @@ namespace net {
     }
 
     auto WS2Socket::connect(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError> {
-        const sockaddr_in addr_info{
-            .sin_family = AF_INET,
-            .sin_port = host_to_net(addr.port),
-            .sin_addr = std::bit_cast<IN_ADDR>(std::get<Ipv4Addr>(addr.addr)),
-            .sin_zero = {},
-        };
+        const auto addr_info = convert_addr(addr);
+        const auto [ptr, size] = addr_info.as_generic();
 
         if(const auto result = ::connect(
             m_handle,
-            std::bit_cast<const sockaddr*>(&addr_info),
-            sizeof(addr_info)
+            ptr,
+            size
         ); result == SOCKET_ERROR) {
             return std::unexpected{ SocketError::ConnectionFailed };
         }
@@ -79,17 +145,13 @@ namespace net {
     }
 
     auto WS2Socket::bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError> {
-        const sockaddr_in addr_info{
-            .sin_family = AF_INET,
-            .sin_port = host_to_net(addr.port),
-            .sin_addr = std::bit_cast<IN_ADDR>(std::get<Ipv4Addr>(addr.addr)),
-            .sin_zero = {},
-        };
+        const auto addr_info = convert_addr(addr);
+        const auto [ptr, size] = addr_info.as_generic();
 
         if(const auto result = ::bind(
             m_handle,
-            std::bit_cast<const sockaddr*>(&addr_info),
-            sizeof(addr_info)
+            ptr,
+            size
         ); result == SOCKET_ERROR) {
             return std::unexpected{ SocketError::BindingFailed };
         }
@@ -102,7 +164,7 @@ namespace net {
     }
 
     auto WS2Socket::accept() const noexcept -> std::expected<std::tuple<WS2Socket, SocketAddr>, SocketError> {
-        sockaddr_in addr_info{};
+        sockaddr_storage addr_info{};
         i32 addr_info_size = sizeof(addr_info);
 
         const SOCKET handle = ::accept(m_handle, std::bit_cast<sockaddr*>(&addr_info), &addr_info_size);
@@ -113,10 +175,27 @@ namespace net {
         WS2Socket socket{};
         socket.m_handle = handle;
 
-        const SocketAddr addr{
-            .addr = std::bit_cast<Ipv4Addr>(addr_info.sin_addr),
-            .port = net_to_host(addr_info.sin_port),
-        };
+        SocketAddr addr{};
+        if(addr_info.ss_family == AF_INET) {
+            const auto addr_info_ipv4 = reinterpret_cast<const sockaddr_in*>(&addr_info);
+
+            addr.addr = std::bit_cast<Ipv4Addr>(addr_info_ipv4->sin_addr);
+            addr.port = net_to_host(addr_info_ipv4->sin_port);
+        } else {
+            const auto addr_info_ipv6 = reinterpret_cast<const sockaddr_in6*>(&addr_info);
+
+            Ipv6Addr addr_host{};
+            std::ranges::transform(
+                std::bit_cast<Ipv6Addr>(addr_info_ipv6->sin6_addr),
+                addr_host.begin(),
+                [](const u16 hex) noexcept -> u16 {
+                    return net_to_host(hex);
+                }
+            );
+
+            addr.addr = addr_host;
+            addr.port = net_to_host(addr_info_ipv6->sin6_port);
+        }
 
         return std::tuple{ std::move(socket), addr };
     }
@@ -155,8 +234,8 @@ namespace net {
         return static_cast<usize>(bytes_read);
     }
 
-    auto Socket::create(const SocketProtocol protocol) -> std::expected<Socket, SocketError> {
-        auto socket_impl_result = WS2Socket::create(protocol);
+    auto Socket::create(const SocketConfig config) -> std::expected<Socket, SocketError> {
+        auto socket_impl_result = WS2Socket::create(config);
         if(!socket_impl_result) {
             return std::unexpected{ socket_impl_result.error() };
         }

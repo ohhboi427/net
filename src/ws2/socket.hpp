@@ -16,7 +16,7 @@ namespace net {
         WS2Socket(WS2Socket&& other) noexcept;
         ~WS2Socket() noexcept;
 
-        [[nodiscard]] static auto create(SocketProtocol protocol) -> std::expected<WS2Socket, SocketError>;
+        [[nodiscard]] static auto create(SocketConfig config) -> std::expected<WS2Socket, SocketError>;
 
         [[nodiscard]] auto connect(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
         [[nodiscard]] auto bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError>;
