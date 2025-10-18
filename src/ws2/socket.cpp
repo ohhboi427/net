@@ -6,6 +6,7 @@
 #include <ws2/context.hpp>
 
 #include <bit>
+#include <variant>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -62,7 +63,7 @@ namespace net {
         const sockaddr_in addr_info{
             .sin_family = AF_INET,
             .sin_port = host_to_net(addr.port),
-            .sin_addr = std::bit_cast<IN_ADDR>(addr.address),
+            .sin_addr = std::bit_cast<IN_ADDR>(std::get<Ipv4Addr>(addr.addr)),
             .sin_zero = {},
         };
 
@@ -81,7 +82,7 @@ namespace net {
         const sockaddr_in addr_info{
             .sin_family = AF_INET,
             .sin_port = host_to_net(addr.port),
-            .sin_addr = std::bit_cast<IN_ADDR>(addr.address),
+            .sin_addr = std::bit_cast<IN_ADDR>(std::get<Ipv4Addr>(addr.addr)),
             .sin_zero = {},
         };
 
@@ -113,7 +114,7 @@ namespace net {
         socket.m_handle = handle;
 
         const SocketAddr addr{
-            .address = std::bit_cast<std::array<u8, 4U>>(addr_info.sin_addr),
+            .addr = std::bit_cast<Ipv4Addr>(addr_info.sin_addr),
             .port = net_to_host(addr_info.sin_port),
         };
 

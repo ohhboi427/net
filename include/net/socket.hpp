@@ -8,6 +8,7 @@
 #include <span>
 #include <tuple>
 #include <utility>
+#include <variant>
 
 namespace net {
     enum class SocketProtocol {
@@ -23,8 +24,13 @@ namespace net {
         TimedOut,
     };
 
+    using Ipv4Addr = std::array<u8, 4U>;
+    using Ipv6Addr = std::array<u16, 8U>;
+
+    using IpAddr = std::variant<Ipv4Addr, Ipv6Addr>;
+
     struct SocketAddr {
-        std::array<u8, 4U> address{};
+        IpAddr addr{};
         u16 port{};
     };
 
@@ -73,21 +79,42 @@ struct std::formatter<net::SocketError> {
 };
 
 template<>
-struct std::formatter<net::SocketAddr> {
-    std::range_formatter<net::u8> fmt{};
+struct std::formatter<net::IpAddr> {
+    std::range_formatter<net::u8> fmt_ipv4{};
+    std::range_formatter<net::u16> fmt_ipv6{};
 
     constexpr auto parse(format_parse_context& ctx) noexcept -> decltype(ctx.begin()) {
-        const auto it = fmt.parse(ctx);
+        fmt_ipv4.set_separator(".");
+        fmt_ipv4.set_brackets({}, {});
 
-        fmt.set_separator(".");
-        fmt.set_brackets({}, {});
+        format_parse_context ipv6_ctx(":x");
+        fmt_ipv6.parse(ipv6_ctx);
+        fmt_ipv6.set_separator(":");
 
-        return it;
+        return ctx.begin();
     }
 
-    auto format(const net::SocketAddr& addr, format_context& ctx) const -> decltype(ctx.out()) {
-        const auto out = fmt.format(addr.address, ctx);
+    auto format(const net::IpAddr& addr, format_context& ctx) const -> decltype(ctx.out()) {
+        return std::visit(
+            [&]<typename T>(const T& value) -> decltype(ctx.out()) {
+                if constexpr(std::is_same_v<T, net::Ipv4Addr>) {
+                    return fmt_ipv4.format(value, ctx);
+                } else {
+                    return fmt_ipv6.format(value, ctx);
+                }
+            },
+            addr
+        );
+    }
+};
 
-        return std::format_to(out, ":{}", addr.port);
+template<>
+struct std::formatter<net::SocketAddr> {
+    static constexpr auto parse(format_parse_context& ctx) noexcept -> decltype(ctx.begin()) {
+        return ctx.begin();
+    }
+
+    static auto format(const net::SocketAddr& addr, format_context& ctx) -> decltype(ctx.out()) {
+        return std::format_to(ctx.out(), "{}:{}", addr.addr, addr.port);
     }
 };
