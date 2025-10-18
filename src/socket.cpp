@@ -2,15 +2,16 @@
 
 namespace net {
     auto IpAddr::address_family() const noexcept -> SocketAddressFamily {
-        return std::visit(
-            [&]<typename T>([[maybe_unused]] const T& value) noexcept -> SocketAddressFamily {
-                if constexpr(std::is_same_v<T, Ipv4Addr>) {
-                    return SocketAddressFamily::Ipv4;
-                } else {
-                    return SocketAddressFamily::Ipv6;
-                }
+        constexpr Visitor visitor{
+            []([[maybe_unused]] const Ipv4Addr& addr) noexcept-> SocketAddressFamily {
+                return SocketAddressFamily::Ipv4;
             },
-            *this
-        );
+
+            []([[maybe_unused]] const Ipv6Addr& addr) noexcept-> SocketAddressFamily {
+                return SocketAddressFamily::Ipv6;
+            },
+        };
+
+        return std::visit(visitor, *this);
     }
 }

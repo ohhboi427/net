@@ -7,7 +7,6 @@
 #include <format>
 #include <span>
 #include <tuple>
-#include <type_traits>
 #include <utility>
 #include <variant>
 
@@ -127,16 +126,17 @@ struct std::formatter<net::IpAddr> {
     }
 
     auto format(const net::IpAddr& addr, format_context& ctx) const -> decltype(ctx.out()) {
-        return std::visit(
-            [&]<typename T>(const T& addr2) -> decltype(ctx.out()) {
-                if constexpr(std::is_same_v<T, net::Ipv4Addr>) {
-                    return fmt_ipv4.format(addr2, ctx);
-                } else {
-                    return fmt_ipv6.format(addr2, ctx);
-                }
+        const net::Visitor visitor{
+            [&](const net::Ipv4Addr& ipv4) noexcept -> decltype(ctx.out()) {
+                return fmt_ipv4.format(ipv4, ctx);
             },
-            addr
-        );
+
+            [&](const net::Ipv6Addr& ipv6) noexcept -> decltype(ctx.out()) {
+                return fmt_ipv6.format(ipv6, ctx);
+            },
+        };
+
+        return std::visit(visitor, addr);
     }
 };
 

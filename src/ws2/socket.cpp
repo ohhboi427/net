@@ -7,7 +7,6 @@
 
 #include <algorithm>
 #include <bit>
-#include <type_traits>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -45,64 +44,66 @@ namespace net {
     }
 
     WS2SocketAddr::WS2SocketAddr(const SocketAddr& addr) noexcept {
-        this->addr = std::visit(
-            [&]<typename T>(const T& addr2) noexcept -> std::variant<sockaddr_in, sockaddr_in6> {
-                if constexpr(std::is_same_v<T, Ipv4Addr>) {
-                    return sockaddr_in{
-                        .sin_family = AF_INET,
-                        .sin_port = host_to_net(addr.port),
-                        .sin_addr = std::bit_cast<IN_ADDR>(addr2),
-                        .sin_zero = {},
-                    };
-                } else {
-                    Ipv6Addr addr_net{};
-                    std::ranges::transform(
-                        addr2,
-                        addr_net.begin(),
-                        [](const u16 hex) noexcept -> u16 {
-                            return host_to_net(hex);
-                        }
-                    );
-
-                    return sockaddr_in6{
-                        .sin6_family = AF_INET6,
-                        .sin6_port = host_to_net(addr.port),
-                        .sin6_flowinfo = {},
-                        .sin6_addr = std::bit_cast<IN6_ADDR>(addr_net),
-                        .sin6_scope_id = {},
-                    };
-                }
+        const Visitor visitor{
+            [&](const Ipv4Addr& ipv4) noexcept -> std::variant<sockaddr_in, sockaddr_in6> {
+                return sockaddr_in{
+                    .sin_family = AF_INET,
+                    .sin_port = host_to_net(addr.port),
+                    .sin_addr = std::bit_cast<IN_ADDR>(ipv4),
+                    .sin_zero = {},
+                };
             },
-            addr.addr
-        );
+
+            [&](const Ipv6Addr& ipv6) noexcept -> std::variant<sockaddr_in, sockaddr_in6> {
+                Ipv6Addr addr_net{};
+                std::ranges::transform(
+                    ipv6,
+                    addr_net.begin(),
+                    [](const u16 hex) noexcept -> u16 {
+                        return host_to_net(hex);
+                    }
+                );
+
+                return sockaddr_in6{
+                    .sin6_family = AF_INET6,
+                    .sin6_port = host_to_net(addr.port),
+                    .sin6_flowinfo = {},
+                    .sin6_addr = std::bit_cast<IN6_ADDR>(addr_net),
+                    .sin6_scope_id = {},
+                };
+            },
+        };
+
+        this->addr = std::visit(visitor, addr.addr);
     }
 
     WS2SocketAddr::operator SocketAddr() const noexcept {
-        return std::visit(
-            [&]<typename T>(const T& addr) noexcept -> SocketAddr {
-                if constexpr(std::is_same_v<T, sockaddr_in>) {
-                    return SocketAddr{
-                        .addr = std::bit_cast<Ipv4Addr>(addr.sin_addr),
-                        .port = net_to_host(addr.sin_port),
-                    };
-                } else {
-                    Ipv6Addr addr_host{};
-                    std::ranges::transform(
-                        std::bit_cast<Ipv6Addr>(addr.sin6_addr),
-                        addr_host.begin(),
-                        [](const u16 hex) noexcept -> u16 {
-                            return net_to_host(hex);
-                        }
-                    );
-
-                    return SocketAddr{
-                        .addr = addr_host,
-                        .port = net_to_host(addr.sin6_port)
-                    };
-                }
+        constexpr Visitor visitor{
+            [](const sockaddr_in& ipv4) {
+                return SocketAddr{
+                    .addr = std::bit_cast<Ipv4Addr>(ipv4.sin_addr),
+                    .port = net_to_host(ipv4.sin_port),
+                };
             },
-            addr
-        );
+
+            [](const sockaddr_in6& ipv6) {
+                Ipv6Addr addr_host{};
+                std::ranges::transform(
+                    std::bit_cast<Ipv6Addr>(ipv6.sin6_addr),
+                    addr_host.begin(),
+                    [](const u16 hex) noexcept -> u16 {
+                        return net_to_host(hex);
+                    }
+                );
+
+                return SocketAddr{
+                    .addr = addr_host,
+                    .port = net_to_host(ipv6.sin6_port)
+                };
+            },
+        };
+
+        return std::visit(visitor, addr);
     }
 
     auto WS2SocketAddr::as_generic() const noexcept -> std::tuple<const sockaddr*, usize> {
