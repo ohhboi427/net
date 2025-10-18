@@ -22,8 +22,29 @@ namespace net {
         Udp,
     };
 
-    using Ipv4Addr = std::array<u8, 4U>;
-    using Ipv6Addr = std::array<u16, 8U>;
+    struct Ipv4Addr {
+        std::array<u8, 4U> value{};
+
+        [[nodiscard]] static constexpr auto unspecified() noexcept -> Ipv4Addr {
+            return {};
+        }
+
+        [[nodiscard]] static constexpr auto loopback() noexcept -> Ipv4Addr {
+            return { 127U, 0U, 0U, 1U };
+        }
+    };
+
+    struct Ipv6Addr {
+        std::array<u16, 8U> value{};
+
+        [[nodiscard]] static constexpr auto unspecified() noexcept -> Ipv6Addr {
+            return {};
+        }
+
+        [[nodiscard]] static constexpr auto loopback() noexcept -> Ipv6Addr {
+            return { 0U, 0U, 0U, 0U, 0U, 0U, 0U, 1U };
+        }
+    };
 
     using IpAddr = std::variant<Ipv4Addr, Ipv6Addr>;
 
@@ -109,11 +130,11 @@ struct std::formatter<net::IpAddr> {
 
     auto format(const net::IpAddr& addr, format_context& ctx) const -> decltype(ctx.out()) {
         return std::visit(
-            [&]<typename T>(const T& value) -> decltype(ctx.out()) {
+            [&]<typename T>(const T& addr2) -> decltype(ctx.out()) {
                 if constexpr(std::is_same_v<T, net::Ipv4Addr>) {
-                    return fmt_ipv4.format(value, ctx);
+                    return fmt_ipv4.format(addr2.value, ctx);
                 } else {
-                    return fmt_ipv6.format(value, ctx);
+                    return fmt_ipv6.format(addr2.value, ctx);
                 }
             },
             addr
