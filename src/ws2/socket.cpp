@@ -7,6 +7,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <utility>
 
 #pragma comment(lib, "ws2_32.lib")
 
@@ -143,14 +144,13 @@ namespace net {
             return std::unexpected{ SocketError::CreationFailed };
         }
 
-        const i32 off = 0;
-        if(const auto result = setsockopt(
+        if(constexpr i32 OFF = 0; setsockopt(
             socket.m_handle,
             IPPROTO_IPV6,
             IPV6_V6ONLY,
-            reinterpret_cast<const char*>(&off),
-            sizeof(off)
-        ); result == SOCKET_ERROR) {
+            reinterpret_cast<const char*>(&OFF),
+            sizeof(OFF)
+        ) == SOCKET_ERROR) {
             return std::unexpected{ SocketError::CreationFailed };
         }
 
@@ -159,13 +159,9 @@ namespace net {
 
     auto WS2Socket::connect(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError> {
         const auto addr_impl = static_cast<WS2SocketAddr>(addr);
-        const auto [ptr, size] = addr_impl.as_generic();
+        const auto [ptr, size] = addr_impl.as_generic(); // NOLINT
 
-        if(const auto result = ::connect(
-            m_handle,
-            ptr,
-            size
-        ); result == SOCKET_ERROR) {
+        if(::connect(m_handle, ptr, static_cast<int>(size)) == SOCKET_ERROR) {
             return std::unexpected{ SocketError::ConnectionFailed };
         }
 
@@ -174,17 +170,13 @@ namespace net {
 
     auto WS2Socket::bind(const SocketAddr& addr) const noexcept -> std::expected<void, SocketError> {
         const auto addr_impl = static_cast<WS2SocketAddr>(addr);
-        const auto [ptr, size] = addr_impl.as_generic();
+        const auto [ptr, size] = addr_impl.as_generic(); // NOLINT
 
-        if(const auto result = ::bind(
-            m_handle,
-            ptr,
-            size
-        ); result == SOCKET_ERROR) {
+        if(::bind(m_handle, ptr, static_cast<int>(size)) == SOCKET_ERROR) {
             return std::unexpected{ SocketError::BindingFailed };
         }
 
-        if(const auto result = ::listen(m_handle, SOMAXCONN); result == SOCKET_ERROR) {
+        if(::listen(m_handle, SOMAXCONN) == SOCKET_ERROR) {
             return std::unexpected{ SocketError::BindingFailed };
         }
 
