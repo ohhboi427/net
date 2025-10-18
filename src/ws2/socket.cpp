@@ -57,8 +57,8 @@ namespace net {
                 } else {
                     Ipv6Addr addr_net{};
                     std::ranges::transform(
-                        addr2.value,
-                        addr_net.value.begin(),
+                        addr2,
+                        addr_net.begin(),
                         [](const u16 hex) noexcept -> u16 {
                             return host_to_net(hex);
                         }
@@ -88,8 +88,8 @@ namespace net {
                 } else {
                     Ipv6Addr addr_host{};
                     std::ranges::transform(
-                        std::bit_cast<Ipv6Addr>(addr.sin6_addr).value,
-                        addr_host.value.begin(),
+                        std::bit_cast<Ipv6Addr>(addr.sin6_addr),
+                        addr_host.begin(),
                         [](const u16 hex) noexcept -> u16 {
                             return net_to_host(hex);
                         }

@@ -1,7 +1,7 @@
 #include <net/socket.hpp>
 
 namespace net {
-    auto SocketAddr::address_family() const noexcept -> SocketAddressFamily {
+    auto IpAddr::address_family() const noexcept -> SocketAddressFamily {
         return std::visit(
             [&]<typename T>([[maybe_unused]] const T& value) noexcept -> SocketAddressFamily {
                 if constexpr(std::is_same_v<T, Ipv4Addr>) {
@@ -10,7 +10,7 @@ namespace net {
                     return SocketAddressFamily::Ipv6;
                 }
             },
-            addr
+            *this
         );
     }
 }

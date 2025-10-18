@@ -22,9 +22,12 @@ namespace net {
         Udp,
     };
 
-    struct Ipv4Addr {
-        std::array<u8, 4U> value{};
+    struct SocketConfig {
+        SocketAddressFamily address_family{};
+        SocketProtocol protocol{};
+    };
 
+    struct Ipv4Addr : std::array<u8, 4U> {
         [[nodiscard]] static constexpr auto unspecified() noexcept -> Ipv4Addr {
             return {};
         }
@@ -34,9 +37,7 @@ namespace net {
         }
     };
 
-    struct Ipv6Addr {
-        std::array<u16, 8U> value{};
-
+    struct Ipv6Addr : std::array<u16, 8U> {
         [[nodiscard]] static constexpr auto unspecified() noexcept -> Ipv6Addr {
             return {};
         }
@@ -46,18 +47,15 @@ namespace net {
         }
     };
 
-    using IpAddr = std::variant<Ipv4Addr, Ipv6Addr>;
-
-    struct SocketAddr {
-        IpAddr addr{};
-        u16 port{};
+    struct IpAddr : std::variant<Ipv4Addr, Ipv6Addr> {
+        using variant::variant;
 
         [[nodiscard]] auto address_family() const noexcept -> SocketAddressFamily;
     };
 
-    struct SocketConfig {
-        SocketAddressFamily address_family{};
-        SocketProtocol protocol{};
+    struct SocketAddr {
+        IpAddr addr{};
+        u16 port{};
     };
 
     enum class SocketError {
@@ -132,9 +130,9 @@ struct std::formatter<net::IpAddr> {
         return std::visit(
             [&]<typename T>(const T& addr2) -> decltype(ctx.out()) {
                 if constexpr(std::is_same_v<T, net::Ipv4Addr>) {
-                    return fmt_ipv4.format(addr2.value, ctx);
+                    return fmt_ipv4.format(addr2, ctx);
                 } else {
-                    return fmt_ipv6.format(addr2.value, ctx);
+                    return fmt_ipv6.format(addr2, ctx);
                 }
             },
             addr

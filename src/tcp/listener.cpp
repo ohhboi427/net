@@ -8,7 +8,7 @@ namespace net {
 
     auto TcpListener::bind(const SocketAddr& addr) -> std::expected<TcpListener, SocketError> {
         const SocketConfig config{
-            .address_family = addr.address_family(),
+            .address_family = addr.addr.address_family(),
             .protocol = SocketProtocol::Tcp,
         };
 

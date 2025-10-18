@@ -8,7 +8,7 @@ namespace net {
 
     auto TcpStream::connect(const SocketAddr& addr) -> std::expected<TcpStream, SocketError> {
         const SocketConfig config{
-            .address_family = addr.address_family(),
+            .address_family = addr.addr.address_family(),
             .protocol = SocketProtocol::Tcp,
         };
 
