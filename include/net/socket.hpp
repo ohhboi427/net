@@ -118,7 +118,7 @@ struct std::formatter<net::IpAddr> {
         fmt_ipv4.set_separator(".");
         fmt_ipv4.set_brackets({}, {});
 
-        format_parse_context ipv6_ctx(":x");
+        format_parse_context ipv6_ctx(":04x");
         fmt_ipv6.parse(ipv6_ctx);
         fmt_ipv6.set_separator(":");
 

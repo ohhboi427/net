@@ -143,6 +143,17 @@ namespace net {
             return std::unexpected{ SocketError::CreationFailed };
         }
 
+        const i32 off = 0;
+        if(const auto result = setsockopt(
+            socket.m_handle,
+            IPPROTO_IPV6,
+            IPV6_V6ONLY,
+            reinterpret_cast<const char*>(&off),
+            sizeof(off)
+        ); result == SOCKET_ERROR) {
+            return std::unexpected{ SocketError::CreationFailed };
+        }
+
         return socket;
     }
 
