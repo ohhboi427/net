@@ -1,5 +1,6 @@
 #pragma once
 
+#include <net/addr.hpp>
 #include <net/defines.hpp>
 #include <net/socket.hpp>
 

@@ -9,7 +9,7 @@ namespace net {
     auto TcpListener::bind(const SocketAddr& addr) -> std::expected<TcpListener, SocketError> {
         const SocketConfig config{
             .address_family = addr.addr.address_family(),
-            .protocol = SocketProtocol::Tcp,
+            .protocol = Protocol::Tcp,
         };
 
         auto socket_result = Socket::create(config);
