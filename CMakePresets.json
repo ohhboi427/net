@@ -44,5 +44,16 @@
       "configurePreset": "windows",
       "configuration": "Release"
     }
+  ],
+  "testPresets": [
+    {
+      "name": "dev-test",
+      "displayName": "Development Test",
+      "configurePreset": "windows",
+      "configuration": "Debug",
+      "output": {
+        "verbosity": "verbose"
+      }
+    }
   ]
 }
