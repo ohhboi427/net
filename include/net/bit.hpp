@@ -30,7 +30,7 @@ namespace net {
             const char* const ptr,
             const usize size
         ) noexcept -> std::span<const byte> {
-            return { std::bit_cast<const byte*>(ptr), size }; // NOLINT
+            return { reinterpret_cast<const byte*>(ptr), size }; // NOLINT
         }
     }
 }
